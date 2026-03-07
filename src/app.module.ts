@@ -5,6 +5,7 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { UsersModule } from './modules/users/users.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
 import { StudentsModule } from './modules/students/students.module';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -24,6 +25,7 @@ import { StudentsModule } from './modules/students/students.module';
             }),
             inject: [ConfigService],
         }),
+        AuthModule,
         UsersModule,
         TeachersModule,
         StudentsModule,

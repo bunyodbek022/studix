@@ -18,7 +18,7 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @ApiPropertyOptional({type: 'string', format: 'binary'})
   @IsOptional()
   @IsString()
   photo?: string;
@@ -45,8 +45,4 @@ export class CreateUserDto {
   @IsString()
   address?: string;
 
-  @ApiPropertyOptional({ enum: UserStatus, example: UserStatus.ACTIVE })
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
 }

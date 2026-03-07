@@ -25,8 +25,4 @@ export class CreateStudentDto {
   @IsDateString()
   birth_date: string;
 
-  @ApiPropertyOptional({ enum: UserStatus, example: UserStatus.ACTIVE })
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
 }

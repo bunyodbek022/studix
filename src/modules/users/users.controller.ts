@@ -1,34 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from 'src/common/config/multer.config';
+import { ApiConsumes } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+    constructor(private readonly usersService: UsersService) { }
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
+    @Post()
+    @UseInterceptors(FileInterceptor('photo', multerConfig))
+    @ApiConsumes("multipart/form-data")
+    create(
+        @Body() createUserDto: CreateUserDto,
+        @UploadedFile() file: Express.Multer.File,
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
+    ) {
+        const imagePath = file ? file.filename : undefined;
+        return this.usersService.create({ ...createUserDto, photo: imagePath });
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
+    @Get()
+    findAll() {
+        return this.usersService.findAll();
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.usersService.findOne(+id);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
+    @Patch(':id')
+    @UseInterceptors(FileInterceptor('photo', multerConfig))
+    update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @UploadedFile() file: Express.Multer.File,) {
+        const imagePath = file ? file.filename : undefined;
+        return this.usersService.update(+id, { ...updateUserDto, photo: imagePath });
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.usersService.remove(+id);
+    }
 }

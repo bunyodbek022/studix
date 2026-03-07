@@ -30,8 +30,4 @@ export class CreateTeacherDto {
   @Min(0)
   experience: number;
 
-  @ApiPropertyOptional({ enum: UserStatus, example: UserStatus.ACTIVE })
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
 }
