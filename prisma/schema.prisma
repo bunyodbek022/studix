@@ -125,7 +125,7 @@ model Course{
   name String @unique
   durationMonth Int
   durationLesson Int
-  status Status
+  status Status @default(ACTIVE)
   level CourseLevel?
   price Decimal
   description String?
