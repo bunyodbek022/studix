@@ -18,92 +18,83 @@ export class AuthService {
     ) { }
 
     async loginStudent(data: loginUserDto) {
-        try {
-            const studentExist = await this.prisma.student.findUnique({
-                where: { email: data.email },
-            });
-            if (!studentExist) {
-                throw new NotFoundException('Student not found');
-            }
-            const isMatch = await bcrypt.compare(
-                data.password,
-                studentExist.password,
-            );
-
-            if (!isMatch) throw new BadRequestException('email or password incorrect');
-
-            const token = await this.jwtService.sign({
-                id: studentExist.id,
-                role: Role.STUDENT,
-                email: studentExist.email,
-            });
-
-            return {
-                success: true,
-                message: 'Student sign in successfully',
-                token,
-            };
-        } catch (error) {
-            throw new InternalServerErrorException();
+        const studentExist = await this.prisma.student.findUnique({
+            where: { email: data.email },
+        });
+        if (!studentExist) {
+            throw new NotFoundException('Student not found');
         }
+        const isMatch = await bcrypt.compare(
+            data.password,
+            studentExist.password,
+        );
+
+        if (!isMatch) throw new BadRequestException('email or password incorrect');
+
+        const token = await this.jwtService.sign({
+            id: studentExist.id,
+            role: Role.STUDENT,
+            email: studentExist.email,
+        });
+
+        return {
+            success: true,
+            message: 'Student sign in successfully',
+            token,
+        };
     }
 
     async loginUser(data: loginUserDto) {
-        try {
-            const userExist = await this.prisma.user.findUnique({
-                where: { email: data.email },
-            });
-            if (!userExist) {
-                throw new NotFoundException('user not found');
-            }
-            const isMatch = await bcrypt.compare(data.password, userExist.password);
-            if (!isMatch)
-                throw new BadRequestException('email or password incorrect');
-            const token = this.jwtService.sign({
-                id: userExist.id,
-                email: userExist.email,
-                role: userExist.role,
-            });
+        const userExist = await this.prisma.user.findUnique({
+            where: { email: data.email },
+        });
 
-            return {
-                success: true,
-                token,
-                message: "User login successfully"
-            };
-        } catch (error) {
-            throw new InternalServerErrorException();
+        if (!userExist) {
+            throw new NotFoundException('user not found');
         }
+        const isMatch = await bcrypt.compare(data.password, userExist.password);
+        if (!isMatch)
+            throw new BadRequestException('email or password incorrect');
+        const token = this.jwtService.sign({
+            id: userExist.id,
+            email: userExist.email,
+            role: userExist.role,
+        });
+
+
+        return {
+            success: true,
+            token,
+            message: "User login successfully"
+        };
+
     }
 
     async loginTeacher(data: loginUserDto) {
-        try {
-            const teacherExist = await this.prisma.teacher.findUnique({
-                where: { email: data.email },
-            });
-            if (!teacherExist) {
-                throw new NotFoundException('teacher not found');
-            }
-            const isMatch = await bcrypt.compare(
-                data.password,
-                teacherExist.password,
-            );
-            if (!isMatch)
-                throw new BadRequestException('email or password incorrect');
-            const token = this.jwtService.sign({
-                id: teacherExist.id,
-                role: Role.TEACHER,
-                email: teacherExist.email,
-            });
 
-            return {
-                success: true,
-                token,
-                message: "User login successfully"
-            };
-        } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException();
+        const teacherExist = await this.prisma.teacher.findUnique({
+            where: { email: data.email },
+        });
+        if (!teacherExist) {
+            throw new NotFoundException('teacher not found');
         }
+        const isMatch = await bcrypt.compare(
+            data.password,
+            teacherExist.password,
+        );
+        if (!isMatch)
+            throw new BadRequestException('email or password incorrect');
+        const token = this.jwtService.sign({
+            id: teacherExist.id,
+            role: Role.TEACHER,
+            email: teacherExist.email,
+        });
+
+        return {
+            success: true,
+            token,
+            message: "User login successfully"
+        };
     }
 
     // async getDashboard(userFromToken, tableName: string) {

@@ -152,7 +152,6 @@ model Group {
   roomId Int
   courseId Int
   name String @unique
-  capacity Int
   startDate DateTime
   startTime String
   weekDays WeekDays[]
@@ -174,6 +173,7 @@ model StudentGroup {
   id Int @id @default(autoincrement())
   groupId Int
   studentId Int
+  userId Int
   status Status @default(ACTIVE)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

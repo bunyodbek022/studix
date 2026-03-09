@@ -5,10 +5,10 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/common/decorators/role.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 
 @Controller('course')
-@ApiBearerAuth()
+@ApiCookieAuth('access_token')
 export class CourseController {
     constructor(private readonly courseService: CourseService) { }
 

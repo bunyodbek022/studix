@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Res } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Param, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { loginUserDto } from './dto/login-user.dto';
 import type { Response } from 'express';
@@ -14,7 +14,17 @@ export class AuthController {
         @Body() dto: loginUserDto,
         @Res() res: Response,
     ) {
-        const result = await this.authService[`login${role[0].toUpperCase() + role.slice(1)}`](dto);
+        let result;
+
+        if (role === 'student') {
+            result = await this.authService.loginStudent(dto);
+        } else if (role === 'staff') {
+            result = await this.authService.loginUser(dto);
+        } else if (role === 'teacher') {
+            result = await this.authService.loginTeacher(dto);
+        } else {
+            throw new BadRequestException('Invalid role');
+        }
 
         res.cookie('token', result.token, {
             httpOnly: true,

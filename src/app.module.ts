@@ -7,6 +7,10 @@ import { TeachersModule } from './modules/teachers/teachers.module';
 import { StudentsModule } from './modules/students/students.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CourseModule } from './modules/course/course.module';
+import { GroupModule } from './modules/group/group.module';
+import { LessonsModule } from './modules/lessons/lessons.module';
+import { RoomsModule } from './modules/rooms/rooms.module';
+import { UserSeeder } from './common/seeds/user.seeder';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -31,8 +35,11 @@ import { CourseModule } from './modules/course/course.module';
         TeachersModule,
         StudentsModule,
         CourseModule,
+        GroupModule,
+        LessonsModule,
+        RoomsModule,
     ],
     controllers: [],
-    providers: [],
+    providers: [UserSeeder],
 })
 export class AppModule { }

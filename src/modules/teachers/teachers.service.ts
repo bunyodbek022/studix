@@ -138,7 +138,6 @@ export class TeachersService {
         id: true,
         name: true,
         status: true,
-        capacity: true,
         startDate: true,
         startTime: true,
         weekDays: true,

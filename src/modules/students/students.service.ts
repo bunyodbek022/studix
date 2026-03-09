@@ -139,7 +139,6 @@ export class StudentsService {
             id: true,
             name: true,
             status: true,
-            capacity: true,
             startDate: true,
             startTime: true,
             weekDays: true,
