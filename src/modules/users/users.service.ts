@@ -1,4 +1,4 @@
-import {BadRequestException,Injectable,NotFoundException,} from '@nestjs/common';
+import {BadRequestException,Injectable,InternalServerErrorException,NotFoundException,} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import PrismaService from 'src/prisma/prisma.service';
 import { MailService } from 'src/common/mail/mail.service';
@@ -26,30 +26,6 @@ export class UsersService {
     private mail: MailService,
   ) {}
 
-  private generatePassword(length = 12): string {
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lower = 'abcdefghijklmnopqrstuvwxyz';
-    const digits = '0123456789';
-    const symbols = '!@#$%^&*()-_=+[]{}';
-    const all = upper + lower + digits + symbols;
-
-    
-    const password =
-      upper[Math.floor(Math.random() * upper.length)] +
-      lower[Math.floor(Math.random() * lower.length)] +
-      digits[Math.floor(Math.random() * digits.length)] +
-      symbols[Math.floor(Math.random() * symbols.length)] +
-      Array.from({ length: length - 4 }, () =>
-        all[Math.floor(Math.random() * all.length)],
-      ).join('');
-
-    
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
-  }
-
   async create(dto: CreateUserDto) {
     const exists = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -58,8 +34,7 @@ export class UsersService {
       throw new BadRequestException('Bu email allaqachon ro\'yxatdan o\'tgan');
     }
 
-    const plainPassword = this.generatePassword();
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
       data: {
@@ -74,7 +49,12 @@ export class UsersService {
       select: SELECT_USER,
     });
 
-    await this.mail.sendCredentials(dto.email, dto.fullName, plainPassword);
+     try {
+        await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
+    } catch (error) {
+        await this.prisma.user.delete({ where: { email: dto.email } });
+        throw new InternalServerErrorException('Email yuborishda xatolik. User yaratilmadi.');
+    }
 
     return {
       message: `Ro'yxatdan o'tish muvaffaqiyatli. Login va parol ${dto.email} manziliga yuborildi.`,

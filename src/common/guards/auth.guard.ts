@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();
 
-    const token = req.cookies['accessToken'];
+    const token = req.cookies['access_token'];
     if (!token) {
       throw new UnauthorizedException('Token missing in cookies');
     }

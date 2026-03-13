@@ -26,15 +26,16 @@ export class AuthController {
             throw new BadRequestException('Invalid role');
         }
 
-        res.cookie('token', result.token, {
+        res.cookie('access_token', result.token, {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         return res.json({
             success: true,
-            message: `${role} signed in`,
+            message: result.message,
             token: result.token,
+            role: result.role
         });
     }
 

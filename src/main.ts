@@ -15,7 +15,8 @@ async function bootstrap() {
     app.use('/uploads', express.static('uploads'));
 
     app.enableCors({
-        origin: '*',
+        origin: 'http://localhost:5173',
+        credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     });
@@ -38,6 +39,8 @@ async function bootstrap() {
         prefix: '/uploads/',
     });
 
+
     await app.listen(process.env.PORT ?? 3000);
+    console.log("Port: ", process.env.PORT)
 }
 bootstrap();

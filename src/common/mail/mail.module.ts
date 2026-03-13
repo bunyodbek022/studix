@@ -19,13 +19,13 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
                 },
             },
             defaults: {
-          from: `"Studix" <${config.get('SMTP_FROM')}>`,
+                from: `"Studix" <${config.get('SMTP_FROM')}>`,
             },
             template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: { strict: true },
-        },
+                dir: join(process.cwd(), 'src', 'common', 'mail', 'template'),
+                adapter: new HandlebarsAdapter(),
+                options: { strict: true },
+            },
         }),
         inject: [ConfigService],
     })],

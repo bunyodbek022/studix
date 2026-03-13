@@ -13,7 +13,7 @@ export class MailService {
     await this.mailer.sendMail({
       to: email,
       subject: 'Your CRM Account Credentials',
-      template: 'credentials',       
+      template: 'credential',       
       context: { fullName, email, password },
     });
   }

@@ -39,8 +39,9 @@ export class AuthService {
 
         return {
             success: true,
-            message: 'Student sign in successfully',
             token,
+            role: Role.STUDENT,
+            message: 'Student sign in successfully'
         };
     }
 
@@ -65,6 +66,7 @@ export class AuthService {
         return {
             success: true,
             token,
+            role: userExist.role,
             message: "User login successfully"
         };
 
@@ -93,6 +95,7 @@ export class AuthService {
         return {
             success: true,
             token,
+            role: Role.TEACHER,
             message: "User login successfully"
         };
     }
