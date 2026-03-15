@@ -11,6 +11,9 @@ import { GroupModule } from './modules/group/group.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
 import { UserSeeder } from './common/seeds/user.seeder';
+import { StudentGroupModule } from './modules/student-group/student-group.module';
+import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module';
+
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -37,7 +40,9 @@ import { UserSeeder } from './common/seeds/user.seeder';
         CourseModule,
         GroupModule,
         LessonsModule,
+        LessonVideosModule,
         RoomsModule,
+        StudentGroupModule,
     ],
     controllers: [],
     providers: [UserSeeder],

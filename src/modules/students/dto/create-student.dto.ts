@@ -1,6 +1,11 @@
-import { IsString, IsEmail, IsEnum, IsOptional, IsDateString, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsDateString,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatus } from '@prisma/client';
 
 export class CreateStudentDto {
   @ApiProperty({ example: 'Dilnoza Yusupova' })
@@ -11,10 +16,9 @@ export class CreateStudentDto {
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
-  @IsString()
-  photo?: string;
+  photo?: any;
 
   @ApiProperty({ example: 'secret123', minLength: 6 })
   @IsString()
@@ -24,5 +28,4 @@ export class CreateStudentDto {
   @ApiProperty({ example: '2000-05-20' })
   @IsDateString()
   birth_date: string;
-
 }
