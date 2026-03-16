@@ -12,6 +12,7 @@ import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { JwtService } from '@nestjs/jwt';
 import { FindAllTeachersDto } from './dto/find-all-teachers.dto';
+import { Role, TeacherHistoryType, UserStatus } from '@prisma/client';
 
 const SELECT_TEACHER = {
     id: true,
@@ -26,12 +27,6 @@ const SELECT_TEACHER = {
     status: true,
     created_at: true,
     updated_at: true,
-    groups: {
-        select: {
-            name: true,
-        },
-        take: 1, // Get at least one group to show in the UI list if needed
-    }
 };
 
 @Injectable()
@@ -42,7 +37,7 @@ export class TeachersService {
         private jwt: JwtService,
     ) { }
 
-    async create(dto: CreateTeacherDto, userId: number, file?: Express.Multer.File) {
+    async create(dto: CreateTeacherDto, currentUser: { role: Role }, file?: Express.Multer.File) {
         const existing = await this.prisma.teacher.findUnique({
             where: { email: dto.email },
         });
@@ -53,21 +48,11 @@ export class TeachersService {
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-        let addedByFullName: string | null = null;
-        if (userId) {
-            const user = await this.prisma.user.findUnique({
-                where: { id: userId },
-                select: { fullName: true }
-            });
-            if (user) {
-                addedByFullName = user.fullName;
-            }
-        }
 
         const teacher = await this.prisma.teacher.create({
             data: {
                 ...dto,
-                addedBy: addedByFullName,
+                addedBy: currentUser.role,
                 password: hashedPassword,
                 photo: file ? file.filename : null,
                 birth_date: dto.birth_date ? new Date(dto.birth_date) : null,
@@ -85,6 +70,7 @@ export class TeachersService {
         const { page = 1, limit = 10, search } = query;
         const skip = (page - 1) * limit;
 
+        const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
         const where = search
             ? {
                 OR: [
@@ -108,7 +94,10 @@ export class TeachersService {
 
         return {
             success: true,
-            data: teachers,
+            data: teachers.map((t) => ({
+                ...t,
+                photo: t.photo ? `${baseUrl}/uploads/${t.photo}` : null,
+            })),
             meta: {
                 total,
                 page,
@@ -119,6 +108,8 @@ export class TeachersService {
     }
 
     async findOne(id: number) {
+        const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
+        
         const teacher = await this.prisma.teacher.findUnique({
             where: { id },
             select: {
@@ -158,17 +149,26 @@ export class TeachersService {
         return {
             sucess: true,
             data: {
-                ...teacher, avgRating
+                ...teacher,
+                avgRating,
+                
+                 photo: teacher.photo ? `${baseUrl}/uploads/${teacher.photo}` : null,
+
             }
         };
     }
 
-    async update(id: number, dto: UpdateTeacherDto) {
+    async update(id: number, dto: UpdateTeacherDto, file?: Express.Multer.File) {
         await this.findOne(id);
 
         const dataToUpdate: any = { ...dto };
+
         if (dto.birth_date) {
             dataToUpdate.birth_date = new Date(dto.birth_date);
+        }
+
+        if (file) {
+            dataToUpdate.photo = file.filename;
         }
 
         const teacher = await this.prisma.teacher.update({
@@ -177,18 +177,137 @@ export class TeachersService {
             select: SELECT_TEACHER,
         });
 
-        return { message: "O'qituvchi ma'lumotlari yangilandi", teacher };
+        return {
+            success: true,
+            message: "O'qituvchi ma'lumotlari yangilandi",
+            data: teacher,
+        };
     }
 
-    async remove(id: number) {
-        await this.findOne(id);
+    async archive(id: number, currentUser: { id: number, role: Role }) {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                status: true,
+                fullName: true,
+                groups: {
+                    where: { status: 'ACTIVE' },
+                    select: { id: true, name: true },
+                },
+            },
+        });
 
+        if (!teacher) {
+            throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
+        }
+
+        if (teacher.status === 'INACTIVE') {
+            throw new BadRequestException(`Bu o'qituvchi allaqachon arxivda`);
+        }
+
+        if (teacher.status === 'DELETED') {
+            throw new BadRequestException(`Bu o'qituvchi o'chirilgan`);
+        }
+
+        // Aktiv guruhlari bor bo'lsa — xato
+        if (teacher.groups.length > 0) {
+            const groupNames = teacher.groups.map((g) => g.name).join(', ');
+            throw new BadRequestException(
+                `O'qituvchini arxivga o'tkazish uchun avval quyidagi guruhlardan olib tashlang: ${groupNames}`
+            );
+        }
+
+        // Arxivga o'tkazish
         await this.prisma.teacher.update({
             where: { id },
             data: { status: 'INACTIVE' },
         });
 
-        return { message: `O'qituvchi (ID: ${id}) o'chirildi` };
+        // TeacherHistory ga saqlash
+        await this.prisma.teacherHistory.create({
+            data: {
+                teacherId: id,
+                userId: currentUser.id,
+                type: TeacherHistoryType.ARCHIVED,
+                description: `O'qituvchi (${teacher.fullName}) arxivga o'tkazildi`,
+            },
+        });
+
+        return {
+            success: true,
+            message: `O'qituvchi arxivga o'tkazildi`,
+        };
+    }
+
+    async remove(id: number, currentUser: { id: number, role: Role }) {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true },
+        });
+
+        if (!teacher) {
+            throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
+        }
+
+        if (teacher.status === 'DELETED') {
+            throw new BadRequestException(`Bu o'qituvchi allaqachon o'chirilgan`);
+        }
+
+        // DELETED qilish
+        await this.prisma.teacher.update({
+            where: { id },
+            data: { status: 'DELETED' },
+        });
+
+        // TeacherHistory ga saqlash
+        await this.prisma.teacherHistory.create({
+            data: {
+                teacherId: id,
+                userId: currentUser.id,
+                type: TeacherHistoryType.DELETED,
+                description: `O'qituvchi (${teacher.fullName}) tizimdan o'chirildi`,
+            },
+        });
+
+        return {
+            success: true,
+            message: `O'qituvchi o'chirildi`,
+        };
+    }
+
+    async restore(id: number, currentUser: { id: number, role: Role }) {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true },
+        });
+
+        if (!teacher) {
+            throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
+        }
+
+        if (teacher.status !== 'INACTIVE') {
+            throw new BadRequestException(`Bu o'qituvchi arxivda emas`);
+        }
+
+        await this.prisma.teacher.update({
+            where: { id },
+            data: { status: 'ACTIVE' },
+        });
+
+        await this.prisma.teacherHistory.create({
+            data: {
+                teacherId: id,
+                userId: currentUser.id,
+                type: 'RESTORED',
+                description: `O'qituvchi (${teacher.fullName}) arxivdan qayta faollashtirildi`,
+            },
+        });
+
+        return {
+            success: true,
+            message: `O'qituvchi faollashtirildi`,
+        };
     }
 
     async getGroups(id: number) {

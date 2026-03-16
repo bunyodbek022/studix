@@ -22,6 +22,7 @@ import {
     ApiOperation,
     ApiTags,
     ApiQuery,
+    ApiParam,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { multerConfig } from 'src/common/config/multer.config';
@@ -30,7 +31,6 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { TeachersService } from './teachers.service';
-import type { Response } from 'express';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { FindAllTeachersDto } from './dto/find-all-teachers.dto';
 
@@ -62,11 +62,10 @@ export class TeachersController {
     @UseInterceptors(FileInterceptor('photo', multerConfig))
     create(
         @Body() dto: CreateTeacherDto,
-        @Req() req: any,
+        @Req() req: Request,
         @UploadedFile() file?: Express.Multer.File,
     ) {
-        const userId = req.user?.id;
-        return this.teachersService.create(dto, userId, file);
+        return this.teachersService.create(dto, req["user"], file);
     }
 
     @Get()
@@ -96,36 +95,68 @@ export class TeachersController {
     }
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
     @ApiOperation({ summary: "O'qituvchi ma'lumotlarini yangilash" })
-    update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTeacherDto) {
-        return this.teachersService.update(id, dto);
-    }
-
-    @Patch(':id/photo')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @UseInterceptors(FileInterceptor('photo', multerConfig))
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
             type: 'object',
-            properties: { photo: { type: 'string', format: 'binary' } },
+            properties: {
+                fullName: { type: 'string', example: 'Jasur Karimov' },
+                email: { type: 'string', example: 'jasur@example.com' },
+                password: { type: 'string', example: 'secret123' },
+                position: { type: 'string', example: 'Backend Developer' },
+                experience: { type: 'number', example: 3 },
+                phone: { type: 'string', example: '+998901234567' },
+                birth_date: { type: 'string', example: '2000-05-20' },
+                photo: { type: 'string', format: 'binary', nullable: true },
+            },
         },
     })
-    @ApiOperation({ summary: "O'qituvchi rasmini yuklash" })
-    uploadPhoto(
+    @UseInterceptors(FileInterceptor('photo', multerConfig))
+    update(
         @Param('id', ParseIntPipe) id: number,
-        @UploadedFile() file: Express.Multer.File,
+        @Body() dto: UpdateTeacherDto,
+        @UploadedFile() file?: Express.Multer.File,
     ) {
-        return this.teachersService.updatePhoto(id, file.filename);
+        return this.teachersService.update(id, dto, file);
     }
+
+
+    @Patch(':id/archive')
+    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @ApiOperation({
+        summary: 'O\'qituvchini arxivga o\'tkazish',
+        description: 'Faqat aktiv guruhlari bo\'lmagan teacher arxivga o\'tkaziladi',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    archive(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: Request,
+    ) {
+        return this.teachersService.archive(id, req["user"]);
+    }
+
+    @Patch(':id/restore')
+    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @ApiOperation({ summary: 'O\'qituvchini arxivdan qayta faollashtirish' })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    restore(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: Request,
+    ) {
+        return this.teachersService.restore(id, req["user"]);
+    }
+
 
     @Delete(':id')
     @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({
-        summary: "O'qituvchini o'chirish (status INACTIVE ga o'tadi)",
-    })
-    remove(@Param('id', ParseIntPipe) id: number) {
-        return this.teachersService.remove(id);
+    @ApiOperation({ summary: 'O\'qituvchini o\'chirish (DELETED)' })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: Request,
+    ) {
+        return this.teachersService.remove(id, req["user"]);
     }
 }

@@ -1,304 +1,310 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
 }
 
-
-
 enum Status {
-  ACTIVE
-  INACTIVE
+    ACTIVE
+    INACTIVE
 }
 
 enum UserStatus {
-  ACTIVE
-  INACTIVE
-  FREEZE
+    ACTIVE
+    INACTIVE
+    FREEZE
+    DELETED
 }
 
 enum CourseLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED
 }
 
 enum WeekDays {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
-  SUNDAY
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
 }
 
 enum HomeworkStatus {
-  APPROVED
-  REJECTED
-  PENDING
-
+    APPROVED
+    REJECTED
+    PENDING
 }
 
 enum HomeworkStatusStudent {
-  COMPLETED
-  MISSED
-  DELAY
+    COMPLETED
+    MISSED
+    DELAY
 }
 
 enum Role {
-  SUPERADMIN
-  ADMIN
-  STUDENT
-  TEACHER
-  MANAGEMENT
-  ADMINISTRATOR
+    SUPERADMIN
+    ADMIN
+    STUDENT
+    TEACHER
+    MANAGEMENT
+    ADMINISTRATOR
+}
+
+enum TeacherHistoryType {
+    ARCHIVED
+    DELETED
+    CREATED
+    UPDATED
+    RESTORED
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  fullName String
-  email String @unique
-  photo String?
-  password String
-  position String
-  role  Role
-  hire_date DateTime
-  address String?
-  status UserStatus @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+    id         Int        @id @default(autoincrement())
+    fullName   String
+    email      String     @unique
+    photo      String?
+    password   String
+    position   String
+    role       Role
+    hire_date  DateTime
+    address    String?
+    status     UserStatus @default(ACTIVE)
+    created_at DateTime   @default(now())
+    updated_at DateTime   @updatedAt
 
-  groups Group[]
-  userLesson Lesson[]
-  userAttendence Attendance[]
-  userHomework Homework[]
-  lessonVideo LessonVideo[]
-  HomeworkResult HomeworkResult[]
+    groups           Group[]
+    userLesson       Lesson[]
+    userAttendence   Attendance[]
+    userHomework     Homework[]
+    lessonVideo      LessonVideo[]
+    HomeworkResult   HomeworkResult[]
+    teacherHistories TeacherHistory[]
 }
 
 model Teacher {
-  id Int @id @default(autoincrement())
-  fullName String
-  email String @unique
-  phone String?
-  birth_date DateTime?
-  photo String?
-  password String
-  position String
-  experience Int
-  addedBy String?
-  status UserStatus @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  groups Group[]
-  teacherLessons Lesson[]
-  teacherAttendence Attendance[]
-  homework Homework[]
-  lessonVideo LessonVideo[]
-  rating Rating[]
-  HomeworkResult HomeworkResult[]
+    id                Int              @id @default(autoincrement())
+    fullName          String
+    email             String           @unique
+    phone             String?
+    birth_date        DateTime?
+    photo             String?
+    password          String
+    position          String
+    experience        Int
+    addedBy           String?
+    status            UserStatus       @default(ACTIVE)
+    created_at        DateTime         @default(now())
+    updated_at        DateTime         @updatedAt
+    groups            Group[]
+    teacherLessons    Lesson[]
+    teacherAttendence Attendance[]
+    homework          Homework[]
+    lessonVideo       LessonVideo[]
+    rating            Rating[]
+    HomeworkResult    HomeworkResult[]
 
+    teacherHistories TeacherHistory[]
+}
 
+model TeacherHistory {
+    id          Int                @id @default(autoincrement())
+    teacherId   Int
+    userId      Int
+    type        TeacherHistoryType
+    description String?
+    created_at  DateTime           @default(now())
+
+    teacher Teacher @relation(fields: [teacherId], references: [id])
+    user    User    @relation(fields: [userId], references: [id])
 }
 
 model Student {
-  id Int @id @default(autoincrement())
-  fullName String
-  email String @unique
-  photo String?
-  password String
-  birth_date DateTime
-  status UserStatus @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+    id         Int        @id @default(autoincrement())
+    fullName   String
+    email      String     @unique
+    photo      String?
+    password   String
+    birth_date DateTime
+    status     UserStatus @default(ACTIVE)
+    created_at DateTime   @default(now())
+    updated_at DateTime   @updatedAt
 
-  StudentGroups StudentGroup[]
-  StudentAttendence Attendance[]
-  HomeworkResult HomeworkResult[]
-  HomeworkResponse HomeworkResponse[]
-
+    StudentGroups     StudentGroup[]
+    StudentAttendence Attendance[]
+    HomeworkResult    HomeworkResult[]
+    HomeworkResponse  HomeworkResponse[]
 }
 
-model Course{
-  id Int @id @default(autoincrement())
-  name String @unique
-  durationMonth Int
-  durationLesson Int
-  status Status @default(ACTIVE)
-  level CourseLevel?
-  price Decimal
-  description String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+model Course {
+    id             Int          @id @default(autoincrement())
+    name           String       @unique
+    durationMonth  Int
+    durationLesson Int
+    status         Status       @default(ACTIVE)
+    level          CourseLevel?
+    price          Decimal
+    description    String?
+    created_at     DateTime     @default(now())
+    updated_at     DateTime     @updatedAt
 
-  groups Group[]
+    groups Group[]
 }
 
 model Room {
-  id Int @id @default(autoincrement())
-  name String @unique
-  capacity Int
-  status Status @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  groups Group[]
+    id         Int      @id @default(autoincrement())
+    name       String   @unique
+    capacity   Int
+    status     Status   @default(ACTIVE)
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+    groups     Group[]
 }
 
 model Group {
-  id Int @id @default(autoincrement())
-  teacherId Int
-  userId Int
-  roomId Int
-  courseId Int
-  name String @unique
-  startDate DateTime
-  startTime String
-  weekDays WeekDays[]
-  status Status @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+    id         Int        @id @default(autoincrement())
+    teacherId  Int
+    userId     Int
+    roomId     Int
+    courseId   Int
+    name       String     @unique
+    startDate  DateTime
+    startTime  String
+    weekDays   WeekDays[]
+    status     Status     @default(ACTIVE)
+    created_at DateTime   @default(now())
+    updated_at DateTime   @updatedAt
 
-  studentGroup StudentGroup[]
-  lesson Lesson[]
-  teacher Teacher @relation(fields: [teacherId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-  room Room @relation(fields: [roomId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
+    studentGroup StudentGroup[]
+    lesson       Lesson[]
+    teacher      Teacher        @relation(fields: [teacherId], references: [id])
+    user         User           @relation(fields: [userId], references: [id])
+    room         Room           @relation(fields: [roomId], references: [id])
+    course       Course         @relation(fields: [courseId], references: [id])
 
-  @@unique([courseId,name])
+    @@unique([courseId, name])
 }
 
 model StudentGroup {
-  id Int @id @default(autoincrement())
-  groupId Int
-  studentId Int
-  userId Int
-  status Status @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+    id         Int      @id @default(autoincrement())
+    groupId    Int
+    studentId  Int
+    userId     Int
+    status     Status   @default(ACTIVE)
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
 
-  
+    group   Group   @relation(fields: [groupId], references: [id])
+    student Student @relation(fields: [studentId], references: [id])
 
-  group Group @relation(fields: [groupId],references: [id])
-  student Student @relation(fields: [studentId],references: [id])
-
-  @@unique([groupId,studentId])
-
-  
+    @@unique([groupId, studentId])
 }
 
 model Lesson {
-  id Int @id @default(autoincrement())
-  groupId Int
-  title String
-  userId Int?
-  teacherId Int?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  lesson Attendance[]
+    id         Int          @id @default(autoincrement())
+    groupId    Int
+    title      String
+    userId     Int?
+    teacherId  Int?
+    created_at DateTime     @default(now())
+    updated_at DateTime     @updatedAt
+    lesson     Attendance[]
 
-  group Group @relation(fields: [groupId],references: [id])
-  teacher Teacher? @relation(fields: [teacherId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  lessonHomework Homework[]
-  lessonVideo LessonVideo[]
-  rating Rating[]
+    group          Group         @relation(fields: [groupId], references: [id])
+    teacher        Teacher?      @relation(fields: [teacherId], references: [id])
+    user           User?         @relation(fields: [userId], references: [id])
+    lessonHomework Homework[]
+    lessonVideo    LessonVideo[]
+    rating         Rating[]
 }
 
 model Attendance {
-  id Int @id @default(autoincrement())
-  lessonId Int
-  userId Int?
-  teacherId Int?
-  studentId Int
-  isPresent Boolean
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  teacher Teacher? @relation(fields: [teacherId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  student Student @relation(fields: [studentId],references: [id])
-  lesson Lesson @relation(fields: [lessonId],references: [id])
+    id         Int      @id @default(autoincrement())
+    lessonId   Int
+    userId     Int?
+    teacherId  Int?
+    studentId  Int
+    isPresent  Boolean
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+    teacher    Teacher? @relation(fields: [teacherId], references: [id])
+    user       User?    @relation(fields: [userId], references: [id])
+    student    Student  @relation(fields: [studentId], references: [id])
+    lesson     Lesson   @relation(fields: [lessonId], references: [id])
 }
 
 model Homework {
-  id Int @id @default(autoincrement())
-  lessonId Int
-  userId Int?
-  teacherId Int?
-  title String
-  file String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  durationTime Int @default(16)
-  teacher Teacher? @relation(fields: [teacherId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  lesson Lesson @relation(fields: [lessonId],references: [id])
+    id           Int      @id @default(autoincrement())
+    lessonId     Int
+    userId       Int?
+    teacherId    Int?
+    title        String
+    file         String?
+    created_at   DateTime @default(now())
+    updated_at   DateTime @updatedAt
+    durationTime Int      @default(16)
+    teacher      Teacher? @relation(fields: [teacherId], references: [id])
+    user         User?    @relation(fields: [userId], references: [id])
+    lesson       Lesson   @relation(fields: [lessonId], references: [id])
 
-  homeworkResult HomeworkResult[]
-  homeworkResponse HomeworkResponse[]
-
-
+    homeworkResult   HomeworkResult[]
+    homeworkResponse HomeworkResponse[]
 }
 
 model LessonVideo {
-  id Int @id @default(autoincrement())
-  lessonId Int
-  userId Int?
-  teacherId Int?
-  title String
-  file String
-  created_at DateTime @default(now())
-  teacher Teacher? @relation(fields: [teacherId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  lesson Lesson @relation(fields: [lessonId],references: [id])
-
+    id         Int      @id @default(autoincrement())
+    lessonId   Int
+    userId     Int?
+    teacherId  Int?
+    title      String
+    file       String
+    created_at DateTime @default(now())
+    teacher    Teacher? @relation(fields: [teacherId], references: [id])
+    user       User?    @relation(fields: [userId], references: [id])
+    lesson     Lesson   @relation(fields: [lessonId], references: [id])
 }
 
 model HomeworkResponse {
-  id Int @id @default(autoincrement())
-  homeworkId Int
-  studentId Int
-  title String
-  file String?
-  status HomeworkStatusStudent
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  student Student @relation(fields: [studentId],references: [id])
-  homework Homework @relation(fields: [homeworkId],references: [id])
-
+    id         Int                   @id @default(autoincrement())
+    homeworkId Int
+    studentId  Int
+    title      String
+    file       String?
+    status     HomeworkStatusStudent
+    created_at DateTime              @default(now())
+    updated_at DateTime              @updatedAt
+    student    Student               @relation(fields: [studentId], references: [id])
+    homework   Homework              @relation(fields: [homeworkId], references: [id])
 }
 
 model HomeworkResult {
-  id Int @id @default(autoincrement())
-  homeworkId Int
-  studentId Int
-  userId Int?
-  teacherId Int?
-  title String
-  file String?
-  score Int
-  status HomeworkStatus
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  teacher Teacher? @relation(fields: [teacherId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  student Student @relation(fields: [studentId],references: [id])
-  homework Homework @relation(fields: [homeworkId],references: [id])
-
-
+    id         Int            @id @default(autoincrement())
+    homeworkId Int
+    studentId  Int
+    userId     Int?
+    teacherId  Int?
+    title      String
+    file       String?
+    score      Int
+    status     HomeworkStatus
+    created_at DateTime       @default(now())
+    updated_at DateTime       @updatedAt
+    teacher    Teacher?       @relation(fields: [teacherId], references: [id])
+    user       User?          @relation(fields: [userId], references: [id])
+    student    Student        @relation(fields: [studentId], references: [id])
+    homework   Homework       @relation(fields: [homeworkId], references: [id])
 }
 
 model Rating {
-  id Int @id @default(autoincrement())
-  teacherId Int
-  lessonId Int
-  score Int
-  created_at DateTime @default(now())
-  teacher Teacher @relation(fields: [teacherId], references: [id])
-  lesson Lesson @relation(fields: [lessonId],references: [id])
-  
-
+    id         Int      @id @default(autoincrement())
+    teacherId  Int
+    lessonId   Int
+    score      Int
+    created_at DateTime @default(now())
+    teacher    Teacher  @relation(fields: [teacherId], references: [id])
+    lesson     Lesson   @relation(fields: [lessonId], references: [id])
 }
