@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Status } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-export class FindAllTeachersDto {
+export class FindAllRoomsDto {
     @ApiPropertyOptional({ example: 1 })
     @IsOptional()
     @Type(() => Number)
@@ -17,14 +18,13 @@ export class FindAllTeachersDto {
     @Min(1)
     limit?: number = 10;
 
-    @ApiPropertyOptional({ example: 'Jasur' })
+    @ApiPropertyOptional({ example: 'Room A' })
     @IsOptional()
     @IsString()
     search?: string;
 
-    @ApiPropertyOptional({ example: 1 })
+    @ApiPropertyOptional({ enum: Status, example: Status.ACTIVE })
     @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    courseId?: number;
+    @IsEnum(Status)
+    status?: Status;
 }

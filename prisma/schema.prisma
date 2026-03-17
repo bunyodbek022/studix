@@ -9,6 +9,8 @@ datasource db {
 enum Status {
     ACTIVE
     INACTIVE
+    FREEZE
+    DELETED
 }
 
 enum UserStatus {
@@ -63,6 +65,22 @@ enum TeacherHistoryType {
     RESTORED
 }
 
+enum StudentHistoryType {
+    CREATED
+    UPDATED
+    ARCHIVED
+    RESTORED
+    DELETED
+}
+
+enum GroupHistoryType {
+    CREATED
+    UPDATED
+    ARCHIVED
+    RESTORED
+    DELETED
+}
+
 model User {
     id         Int        @id @default(autoincrement())
     fullName   String
@@ -84,6 +102,8 @@ model User {
     lessonVideo      LessonVideo[]
     HomeworkResult   HomeworkResult[]
     teacherHistories TeacherHistory[]
+    studentHistories StudentHistory[]
+    groupHistories   GroupHistory[]
 }
 
 model Teacher {
@@ -138,6 +158,19 @@ model Student {
     StudentAttendence Attendance[]
     HomeworkResult    HomeworkResult[]
     HomeworkResponse  HomeworkResponse[]
+    studentHistories  StudentHistory[]
+}
+
+model StudentHistory {
+    id          Int                @id @default(autoincrement())
+    studentId   Int
+    userId      Int?
+    type        StudentHistoryType
+    description String?
+    created_at  DateTime           @default(now())
+
+    student Student @relation(fields: [studentId], references: [id])
+    user    User?   @relation(fields: [userId], references: [id])
 }
 
 model Course {
@@ -179,14 +212,27 @@ model Group {
     created_at DateTime   @default(now())
     updated_at DateTime   @updatedAt
 
-    studentGroup StudentGroup[]
-    lesson       Lesson[]
-    teacher      Teacher        @relation(fields: [teacherId], references: [id])
-    user         User           @relation(fields: [userId], references: [id])
-    room         Room           @relation(fields: [roomId], references: [id])
-    course       Course         @relation(fields: [courseId], references: [id])
+    studentGroup   StudentGroup[]
+    lesson         Lesson[]
+    teacher        Teacher        @relation(fields: [teacherId], references: [id])
+    user           User           @relation(fields: [userId], references: [id])
+    room           Room           @relation(fields: [roomId], references: [id])
+    course         Course         @relation(fields: [courseId], references: [id])
+    groupHistories GroupHistory[]
 
     @@unique([courseId, name])
+}
+
+model GroupHistory {
+    id          Int              @id @default(autoincrement())
+    groupId     Int
+    userId      Int?
+    type        GroupHistoryType
+    description String?
+    created_at  DateTime         @default(now())
+
+    group Group @relation(fields: [groupId], references: [id])
+    user  User? @relation(fields: [userId], references: [id])
 }
 
 model StudentGroup {
@@ -235,6 +281,8 @@ model Attendance {
     user       User?    @relation(fields: [userId], references: [id])
     student    Student  @relation(fields: [studentId], references: [id])
     lesson     Lesson   @relation(fields: [lessonId], references: [id])
+
+     @@unique([lessonId, studentId])
 }
 
 model Homework {

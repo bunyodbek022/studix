@@ -65,7 +65,7 @@ export class TeachersController {
         @Req() req: Request,
         @UploadedFile() file?: Express.Multer.File,
     ) {
-        return this.teachersService.create(dto, req["user"], file);
+        return this.teachersService.create(dto, req['user'], file);
     }
 
     @Get()
@@ -74,6 +74,7 @@ export class TeachersController {
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'Jasur' })
+    @ApiQuery({ name: 'courseId', required: false, type: Number, example: 1 })
     findAll(@Query() query: FindAllTeachersDto) {
         return this.teachersService.findAll(query);
     }
@@ -122,41 +123,30 @@ export class TeachersController {
         return this.teachersService.update(id, dto, file);
     }
 
-
     @Patch(':id/archive')
     @Roles(Role.ADMIN, Role.SUPERADMIN)
     @ApiOperation({
-        summary: 'O\'qituvchini arxivga o\'tkazish',
-        description: 'Faqat aktiv guruhlari bo\'lmagan teacher arxivga o\'tkaziladi',
+        summary: "O'qituvchini arxivga o'tkazish",
+        description: "Faqat aktiv guruhlari bo'lmagan teacher arxivga o'tkaziladi",
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    archive(
-        @Param('id', ParseIntPipe) id: number,
-        @Req() req: Request,
-    ) {
-        return this.teachersService.archive(id, req["user"]);
+    archive(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+        return this.teachersService.archive(id, req['user']);
     }
 
     @Patch(':id/restore')
     @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'O\'qituvchini arxivdan qayta faollashtirish' })
+    @ApiOperation({ summary: "O'qituvchini arxivdan qayta faollashtirish" })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    restore(
-        @Param('id', ParseIntPipe) id: number,
-        @Req() req: Request,
-    ) {
-        return this.teachersService.restore(id, req["user"]);
+    restore(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+        return this.teachersService.restore(id, req['user']);
     }
-
 
     @Delete(':id')
     @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'O\'qituvchini o\'chirish (DELETED)' })
+    @ApiOperation({ summary: "O'qituvchini o'chirish (DELETED)" })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    remove(
-        @Param('id', ParseIntPipe) id: number,
-        @Req() req: Request,
-    ) {
-        return this.teachersService.remove(id, req["user"]);
+    remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+        return this.teachersService.remove(id, req['user']);
     }
 }

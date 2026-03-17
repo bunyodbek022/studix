@@ -110,7 +110,8 @@ export class StudentsController {
     @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
     @ApiOperation({
         summary: 'Student davomat detallari',
-        description: 'Berilgan guruh bo\'yicha studentning qoldirgan darslari ro\'yxati',
+        description:
+            "Berilgan guruh bo'yicha studentning qoldirgan darslari ro'yxati",
     })
     @ApiParam({ name: 'studentId', type: Number, example: 12 })
     @ApiParam({ name: 'groupId', type: Number, example: 2 })
@@ -124,8 +125,9 @@ export class StudentsController {
     @Get(':studentId/groups/:groupId/homeworks')
     @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
     @ApiOperation({
-        summary: 'Student vazifalar ro\'yxati',
-        description: 'Berilgan guruh bo\'yicha studentning barcha vazifalari va natijalari',
+        summary: "Student vazifalar ro'yxati",
+        description:
+            "Berilgan guruh bo'yicha studentning barcha vazifalari va natijalari",
     })
     @ApiParam({ name: 'studentId', type: Number, example: 12 })
     @ApiParam({ name: 'groupId', type: Number, example: 2 })
@@ -162,11 +164,26 @@ export class StudentsController {
         return this.studentsService.update(id, dto, file);
     }
 
+    @Patch(':id/archive')
+    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @ApiOperation({ summary: "Studentni arxivga o'tkazish" })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    archive(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.archive(id);
+    }
+
+    @Patch(':id/restore')
+    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @ApiOperation({ summary: 'Studentni arxivdan qayta faollashtirish' })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    restore(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.restore(id);
+    }
 
     @Delete(':id')
     @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "O'quvchini o'chirish (status INACTIVE ga o'tadi)" })
+    @ApiOperation({ summary: "Studentni butunlay o'chirish (DELETED)" })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.remove(id);
     }

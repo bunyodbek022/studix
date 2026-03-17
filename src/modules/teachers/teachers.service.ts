@@ -67,19 +67,28 @@ export class TeachersService {
     }
 
     async findAll(query: FindAllTeachersDto) {
-        const { page = 1, limit = 10, search } = query;
+        const { page = 1, limit = 10, search, courseId } = query;
         const skip = (page - 1) * limit;
 
-        const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
-        const where = search
-            ? {
+        const where: any = {
+            status: { not: 'DELETED' as const },
+            ...(search && {
                 OR: [
                     { fullName: { contains: search, mode: 'insensitive' as const } },
                     { email: { contains: search, mode: 'insensitive' as const } },
                     { position: { contains: search, mode: 'insensitive' as const } },
                 ],
-            }
-            : {};
+            }),
+            // courseId bo'yicha — o'sha kursda guruhi bor teacherlar
+            ...(courseId && {
+                groups: {
+                    some: {
+                        courseId,
+                        status: 'ACTIVE',
+                    },
+                },
+            }),
+        };
 
         const [teachers, total] = await this.prisma.$transaction([
             this.prisma.teacher.findMany({
@@ -91,6 +100,8 @@ export class TeachersService {
             }),
             this.prisma.teacher.count({ where }),
         ]);
+
+        const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
 
         return {
             success: true,
@@ -109,7 +120,7 @@ export class TeachersService {
 
     async findOne(id: number) {
         const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
-        
+
         const teacher = await this.prisma.teacher.findUnique({
             where: { id },
             select: {
@@ -151,8 +162,8 @@ export class TeachersService {
             data: {
                 ...teacher,
                 avgRating,
-                
-                 photo: teacher.photo ? `${baseUrl}/uploads/${teacher.photo}` : null,
+
+                photo: teacher.photo ? `${baseUrl}/uploads/${teacher.photo}` : null,
 
             }
         };

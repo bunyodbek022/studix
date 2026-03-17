@@ -8,6 +8,7 @@ import { MailService } from 'src/common/mail/mail.service';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { Status } from '@prisma/client';
 
 const SELECT_STUDENT = {
     id: true,
@@ -66,6 +67,7 @@ export class StudentsService {
 
     async findAll() {
         const students = await this.prisma.student.findMany({
+            where: { status: { not: 'DELETED' } },
             select: SELECT_STUDENT,
             orderBy: { created_at: 'desc' },
         });
@@ -171,7 +173,7 @@ export class StudentsService {
         });
 
         if (!studentGroups.length) {
-            throw new NotFoundException(`Student with id ${studentId} has no groups`);
+            return { success: true, data: [] };
         }
 
         const data = studentGroups.map((sg) => {
@@ -348,17 +350,128 @@ export class StudentsService {
         };
     }
 
-    async remove(id: number) {
-        await this.findOne(id);
+    async archive(id: number) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true },
+        });
 
+        if (!student) {
+            throw new NotFoundException(`ID: ${id} bo'yicha student topilmadi`);
+        }
+
+        if (student.status === 'INACTIVE') {
+            throw new BadRequestException('Bu student allaqachon arxivda');
+        }
+
+        if (student.status === 'DELETED') {
+            throw new BadRequestException('Bu student o\'chirilgan');
+        }
+
+        // StudentGroup larni INACTIVE qilish
+        await this.prisma.studentGroup.updateMany({
+            where: {
+                studentId: id,
+                status: 'ACTIVE',
+            },
+            data: { status: 'INACTIVE' },
+        });
+
+        // Studentni INACTIVE qilish
         await this.prisma.student.update({
             where: { id },
             data: { status: 'INACTIVE' },
         });
 
+        // Tarixga saqlash
+        await this.prisma.studentHistory.create({
+            data: {
+                studentId: id,
+                type: 'ARCHIVED',
+                description: `Student (${student.fullName}) arxivga o'tkazildi. Barcha guruhlardagi statusi INACTIVE qilindi`,
+            },
+        });
+
         return {
             success: true,
-            message: `O'quvchi (ID: ${id}) o'chirildi`,
+            message: 'Student arxivga o\'tkazildi',
+        };
+    }
+
+    async restore(id: number) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true },
+        });
+
+        if (!student) {
+            throw new NotFoundException(`ID: ${id} bo'yicha student topilmadi`);
+        }
+
+        if (student.status !== 'INACTIVE') {
+            throw new BadRequestException('Bu student arxivda emas');
+        }
+
+        await this.prisma.student.update({
+            where: { id },
+            data: { status: 'ACTIVE' },
+        });
+
+        // Tarixga saqlash
+        await this.prisma.studentHistory.create({
+            data: {
+                studentId: id,
+                type: 'RESTORED',
+                description: `Student (${student.fullName}) arxivdan qayta faollashtirildi`,
+            },
+        });
+
+        return {
+            success: true,
+            message: 'Student faollashtirildi',
+        };
+    }
+
+    async remove(id: number) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true },
+        });
+
+        if (!student) {
+            throw new NotFoundException(`ID: ${id} bo'yicha student topilmadi`);
+        }
+
+        if (student.status === 'DELETED') {
+            throw new BadRequestException('Bu student allaqachon o\'chirilgan');
+        }
+
+        // StudentGroup lardan DELETED qilish 
+        await this.prisma.studentGroup.updateMany({
+            where: { studentId: id },
+            data: {
+                status: Status.DELETED
+            }
+        });
+
+        // Studentni DELETED qilish
+        await this.prisma.student.update({
+            where: { id },
+            data: { status: 'DELETED' },
+        });
+
+        // Tarixga saqlash
+        await this.prisma.studentHistory.create({
+            data: {
+                studentId: id,
+                type: 'DELETED',
+                description: `Student (${student.fullName}) tizimdan o'chirildi. Barcha guruhlardan olib tashlandi`,
+            },
+        });
+
+        return {
+            success: true,
+            message: 'Student o\'chirildi',
         };
     }
 
