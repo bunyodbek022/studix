@@ -1,6 +1,24 @@
-import { Body, Controller, Delete, Param, ParseIntPipe, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Param,
+    ParseIntPipe,
+    Post,
+    Req,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiCookieAuth, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
+import {
+    ApiBody,
+    ApiConsumes,
+    ApiCookieAuth,
+    ApiOperation,
+    ApiTags,
+    ApiParam,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { multerConfig } from 'src/common/config/multer.config';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -8,19 +26,20 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { CreateLessonVideoDto } from './dto/create-lesson-video.dto';
 import { LessonVideosService } from './lesson-videos.service';
+import { multerVideoConfig } from 'src/common/config/multer-video.config';
 
 @ApiTags('Lesson Videos')
 @Controller('lesson-videos')
 @UseGuards(AuthGuard, RolesGuard)
 @ApiCookieAuth('access_token')
 export class LessonVideosController {
-    constructor(private readonly lessonVideosService: LessonVideosService) {}
+    constructor(private readonly lessonVideosService: LessonVideosService) { }
 
     @Post()
     @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-    @ApiOperation({ summary: "Dars uchun yangi video yuklash" })
+    @ApiOperation({ summary: 'Dars uchun yangi video yuklash' })
     @ApiConsumes('multipart/form-data')
-    @UseInterceptors(FileInterceptor('file', multerConfig))
+    @UseInterceptors(FileInterceptor('file', multerVideoConfig))
     @ApiBody({
         schema: {
             type: 'object',
@@ -37,6 +56,9 @@ export class LessonVideosController {
         @UploadedFile() file: Express.Multer.File,
         @Req() req: Request,
     ) {
+        console.log(file);
+        console.log(file?.filename);
+        console.log(file?.originalname);
         return this.lessonVideosService.create(dto, file?.filename, req['user']);
     }
 

@@ -31,6 +31,7 @@ export class AuthController {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
+        console.log(result.role)
         return res.json({
             success: true,
             message: result.message,

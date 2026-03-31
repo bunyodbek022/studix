@@ -79,15 +79,7 @@ export class TeachersService {
                     { position: { contains: search, mode: 'insensitive' as const } },
                 ],
             }),
-            // courseId bo'yicha — o'sha kursda guruhi bor teacherlar
-            ...(courseId && {
-                groups: {
-                    some: {
-                        courseId,
-                        status: 'ACTIVE',
-                    },
-                },
-            }),
+            // courseId bo'yicha — o'sha kursda guruhi bor teacherla
         };
 
         const [teachers, total] = await this.prisma.$transaction([

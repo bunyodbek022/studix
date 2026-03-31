@@ -175,9 +175,14 @@ export class LessonsService {
             throw new NotFoundException("Lesson not found");
         }
 
-        await this.prisma.lesson.delete({
-            where: { id }
-        });
+        await this.prisma.$transaction([
+            this.prisma.attendance.deleteMany({
+                where: { lessonId: id },
+            }),
+            this.prisma.lesson.delete({
+                where: { id },
+            }),
+        ]);
 
         return {
             success: true,
