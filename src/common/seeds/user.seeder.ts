@@ -9,7 +9,7 @@ export class UserSeeder implements OnModuleInit {
     async onModuleInit() {
         const existUser = await this.prisma.user.findFirst({
             where: {
-                email: "gulomjonovbumyodbek60@gmail.com"
+                email: "gulomjonovbunyodbek60@gmail.com"
             }
         })
         if (!existUser) {
