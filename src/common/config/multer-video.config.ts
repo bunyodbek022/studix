@@ -1,11 +1,15 @@
 import { diskStorage } from "multer";
 import { extname } from "path";
 import { BadRequestException } from "@nestjs/common";
+import { mkdirSync } from "fs";
+
+const uploadDir = "./uploads/videos";
+mkdirSync(uploadDir, { recursive: true });
 
 export const multerVideoConfig = {
   storage: diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "./uploads/videos");
+      cb(null, uploadDir);
     },
 
     filename: (req, file, cb) => {

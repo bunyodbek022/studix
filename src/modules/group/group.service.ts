@@ -223,6 +223,14 @@ export class GroupsService {
                             fullName: true,
                         },
                     },
+                    lessonVideo: {
+                        select: {
+                            id: true,
+                            title: true,
+                            file: true,
+                            created_at: true
+                        }
+                    },
                     _count: {
                         select: {
                             lessonHomework: true,
@@ -248,6 +256,7 @@ export class GroupsService {
             homeworkCount: l._count.lessonHomework,
             attendanceCount: l._count.lesson,
             videoCount: l._count.lessonVideo,
+            lessonVideo: l.lessonVideo,
         }));
 
         return {
@@ -269,7 +278,19 @@ export class GroupsService {
             include: {
                 course: { select: { durationMonth: true, durationLesson: true } },
                 lesson: {
-                    select: { id: true, title: true, created_at: true },
+                    select: { 
+                        id: true, 
+                        title: true, 
+                        created_at: true,
+                        lessonVideo: {
+                            select: {
+                                id: true,
+                                title: true,
+                                file: true,
+                                created_at: true
+                            }
+                        }
+                    },
                     orderBy: { created_at: 'asc' },
                 },
             },
@@ -293,13 +314,13 @@ export class GroupsService {
             dayLabel: string;
             monthLabel: string;
             isWeekend: boolean;
-            lesson: { id: number; title: string } | null;
+            lesson: { id: number; title: string, lessonVideo: any[] } | null;
         }[] = [];
 
-        const lessonDateMap = new Map<string, { id: number; title: string }>();
+        const lessonDateMap = new Map<string, { id: number; title: string, lessonVideo: any[] }>();
         for (const lesson of group.lesson) {
             const dateKey = new Date(lesson.created_at).toISOString().split('T')[0];
-            lessonDateMap.set(dateKey, { id: lesson.id, title: lesson.title });
+            lessonDateMap.set(dateKey, { id: lesson.id, title: lesson.title, lessonVideo: lesson.lessonVideo });
         }
 
         const current = new Date(startDate);
