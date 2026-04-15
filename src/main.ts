@@ -15,12 +15,25 @@ async function bootstrap() {
     app.use('/uploads', express.static('uploads'));
 
     app.enableCors({
-        origin: ['http://localhost:5173',           
-        'https://studix-frontend.vercel.app',],
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-    });
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'https://studix-frontend.vercel.app',
+        ];
+        
+        // Vercel preview URL'larini ham ruxsat berish
+        const vercelPreview = /^https:\/\/studix-frontend.*\.vercel\.app$/;
+        
+        if (!origin || allowedOrigins.includes(origin) || vercelPreview.test(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked: ${origin}`));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+});
 
     app.setGlobalPrefix('api/v1')
     const documentFactory = () => SwaggerModule.createDocument(app, config)
