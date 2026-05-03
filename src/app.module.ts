@@ -13,6 +13,7 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { UserSeeder } from './common/seeds/user.seeder';
 import { StudentGroupModule } from './modules/student-group/student-group.module';
 import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module';
+import { LabelsModule } from './modules/labels/labels.module';
 
 @Module({
     imports: [
@@ -43,6 +44,7 @@ import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module
         LessonVideosModule,
         RoomsModule,
         StudentGroupModule,
+        LabelsModule,
     ],
     controllers: [],
     providers: [UserSeeder],
