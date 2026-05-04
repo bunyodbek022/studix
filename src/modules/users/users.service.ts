@@ -53,6 +53,8 @@ export class UsersService {
         await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
     } catch (error) {
         await this.prisma.user.delete({ where: { email: dto.email } });
+        console.log(error);
+        
         throw new InternalServerErrorException('Email yuborishda xatolik. User yaratilmadi.');
     }
 

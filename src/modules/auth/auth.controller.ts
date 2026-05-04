@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Param, Post, Res } from '@nestjs
 import { AuthService } from './auth.service';
 import { loginUserDto } from './dto/login-user.dto';
 import type { Response } from 'express';
+import { Role } from '@prisma/client';
 
 
 @Controller()
@@ -10,18 +11,25 @@ export class AuthController {
 
     @Post(':role/login')
     async login(
-        @Param('role') role: 'student' | 'staff' | 'teacher',
+        @Param('role') role: string,
         @Body() dto: loginUserDto,
         @Res() res: Response,
     ) {
         let result;
+        const roleParam = role.toUpperCase();
 
-        if (role === 'student') {
+        if (roleParam === Role.STUDENT) {
             result = await this.authService.loginStudent(dto);
-        } else if (role === 'staff') {
+        } else if (roleParam === 'STAFF') {
             result = await this.authService.loginUser(dto);
-        } else if (role === 'teacher') {
+        } else if (roleParam === Role.TEACHER) {
             result = await this.authService.loginTeacher(dto);
+        } else if (USER_ROLES.includes(roleParam)) {
+            result = await this.authService.loginUser(dto);
+
+            if (result.role !== roleParam) {
+                throw new BadRequestException('Invalid role');
+            }
         } else {
             throw new BadRequestException('Invalid role');
         }
@@ -43,3 +51,10 @@ export class AuthController {
 
 
 }
+
+const USER_ROLES = [
+    Role.SUPERADMIN,
+    Role.ADMIN,
+    Role.MANAGEMENT,
+    Role.ADMINISTRATOR,
+] as string[];

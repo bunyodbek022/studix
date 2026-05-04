@@ -26,12 +26,24 @@ import { LabelsModule } from './modules/labels/labels.module';
             imports: [ConfigModule],
             useFactory: async (
                 configService: ConfigService,
-            ): Promise<JwtModuleOptions> => ({
-                secret: configService.get<string>('JWT_SECRET') as string,
-                signOptions: {
-                    expiresIn: configService.get('JWT_EXPIRATION_TIME', '1h'),
-                },
-            }),
+            ): Promise<JwtModuleOptions> => {
+                const secret = configService.get<string>('JWT_SECRET');
+
+                if (!secret) {
+                    throw new Error('JWT_SECRET is not set');
+                }
+
+                const expiresIn = (configService.get<string>('JWT_EXPIRATION_TIME') ?? '1h') as NonNullable<
+                    JwtModuleOptions['signOptions']
+                >['expiresIn'];
+
+                return {
+                    secret,
+                    signOptions: {
+                        expiresIn,
+                    },
+                };
+            },
             inject: [ConfigService],
         }),
         AuthModule,
