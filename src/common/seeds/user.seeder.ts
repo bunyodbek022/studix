@@ -6,26 +6,32 @@ import { hashPassword } from "src/common/config/bcrypt";
 export class UserSeeder implements OnModuleInit {
     constructor(private prisma: PrismaService) { }
 
-    async onModuleInit() {
+   async onModuleInit() {
+    try {
         const existUser = await this.prisma.user.findFirst({
             where: {
-                email: "gulomjonovbunyodbek60@gmail.com"
+                email: "studix@edu.uz"
             }
-        })
+        });
+
         if (!existUser) {
             await this.prisma.user.create({
                 data: {
                     fullName: "Bunyodbek",
-                    email: "gulomjonovbunyodbek60@gmail.com",
+                    email: "studix@edu.uz",
                     password: await hashPassword("12345678"),
                     role: "SUPERADMIN",
                     position: "Full-Stack",
                     hire_date: new Date("2026-01-01")
                 }
-            })
+            });
 
-            Logger.log("✅ SuperAdmin created")
+            Logger.log("✅ SuperAdmin created");
+        } else {
+            Logger.log("✅ SuperAdmin already exist");
         }
-        Logger.log("✅ SuperAdmin already exist")
+    } catch (error) {
+        Logger.error("Seeder skipped (DB yo‘q)");
     }
+}
 }

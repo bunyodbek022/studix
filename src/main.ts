@@ -18,6 +18,8 @@ async function bootstrap() {
     origin: (origin, callback) => {
         const allowedOrigins = [
             'http://localhost:5173',
+            'http://localhost:4000',
+            'https://studix-jo89.vercel.app',
             'https://studix-frontend.vercel.app',
         ];
         
