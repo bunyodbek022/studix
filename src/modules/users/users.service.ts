@@ -29,6 +29,15 @@ export class UsersService {
   async create(dto: CreateUserDto, currentUser?: { branchId?: number }) {
     const branchId = dto.branchId ?? currentUser?.branchId;
 
+    if (branchId) {
+      const existBranch = await this.prisma.branch.findUnique({
+        where: { id: branchId },
+      });
+      if (!existBranch) {
+        throw new BadRequestException(`ID: ${branchId} bo'yicha filial topilmadi`);
+      }
+    }
+
     const exists = await this.prisma.user.findFirst({
       where: { email: dto.email, branchId },
     });
