@@ -361,6 +361,7 @@ model Lesson {
   title      String
   userId     Int?
   teacherId  Int?
+  lessonDate String?
   created_at DateTime     @default(now())
   updated_at DateTime     @updatedAt
   lesson     Attendance[]

@@ -281,6 +281,7 @@ export class GroupsService {
                     select: { 
                         id: true, 
                         title: true, 
+                        lessonDate: true,
                         created_at: true,
                         lessonVideo: {
                             select: {
@@ -319,7 +320,7 @@ export class GroupsService {
 
         const lessonDateMap = new Map<string, { id: number; title: string, lessonVideo: any[] }>();
         for (const lesson of group.lesson) {
-            const dateKey = new Date(lesson.created_at).toISOString().split('T')[0];
+            const dateKey = lesson.lessonDate ?? new Date(lesson.created_at).toISOString().split('T')[0];
             lessonDateMap.set(dateKey, { id: lesson.id, title: lesson.title, lessonVideo: lesson.lessonVideo });
         }
 
@@ -367,6 +368,7 @@ export class GroupsService {
                     select: { 
                         id: true, 
                         title: true, 
+                        lessonDate: true,
                         created_at: true,
                         lessonVideo: {
                             select: {
@@ -405,7 +407,7 @@ export class GroupsService {
 
         const lessonDateMap = new Map<string, { id: number; title: string, lessonVideo: any[] }>();
         for (const lesson of group.lesson) {
-            const dateKey = new Date(lesson.created_at).toISOString().split('T')[0];
+            const dateKey = lesson.lessonDate ?? new Date(lesson.created_at).toISOString().split('T')[0];
             lessonDateMap.set(dateKey, { id: lesson.id, title: lesson.title, lessonVideo: lesson.lessonVideo });
         }
 

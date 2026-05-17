@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger"
-import { IsNumber, IsString } from "class-validator"
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
+import { IsNumber, IsOptional, IsString } from "class-validator"
 
 export class CreateLessonDto {
     @ApiProperty()
@@ -9,4 +9,9 @@ export class CreateLessonDto {
     @ApiProperty()
     @IsString()
     title: string
+
+    @ApiPropertyOptional({ example: '2026-05-17', description: 'Dars otilgan sana (YYYY-MM-DD)' })
+    @IsOptional()
+    @IsString()
+    lessonDate?: string
 }

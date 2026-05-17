@@ -12,16 +12,24 @@ export class LessonsService {
     async createLesson(payload: CreateLessonDto, currentUser: { id: number, role: Role }) {
         const existGroup = await this.prisma.group.findUnique({
             where: { id: payload.groupId, status: Status.ACTIVE },
-
         })
 
         if (!existGroup) {
             throw new NotFoundException("Group not found with this id")
         }
 
+        let taskDate = payload.lessonDate;
+        if (!taskDate) {
+            const tashkentOffset = 5 * 60 * 60 * 1000;
+            const localTime = new Date(Date.now() + tashkentOffset);
+            taskDate = localTime.toISOString().split('T')[0];
+        }
+
         await this.prisma.lesson.create({
             data: {
-                ...payload,
+                groupId: payload.groupId,
+                title: payload.title,
+                lessonDate: taskDate,
                 branchId: existGroup.branchId,
                 teacherId: currentUser.role == Role.TEACHER ? currentUser.id : null,
                 userId: currentUser.role != Role.TEACHER ? currentUser.id : null
@@ -204,35 +212,65 @@ export class LessonsService {
         if (year) {
             if (month) {
                 if (day) {
-                    // Aniq bir kunni filter qilish
+                    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const startDate = new Date(year, month - 1, day, 0, 0, 0);
                     const endDate = new Date(year, month - 1, day, 23, 59, 59);
                     dateFilter = {
-                        created_at: {
-                            gte: startDate,
-                            lte: endDate,
-                        },
+                        OR: [
+                            { lessonDate: dateStr },
+                            {
+                                AND: [
+                                    { lessonDate: null },
+                                    {
+                                        created_at: {
+                                            gte: startDate,
+                                            lte: endDate,
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
                     };
                 } else {
-                    // Aniq bir oyni filter qilish
+                    const prefix = `${year}-${String(month).padStart(2, '0')}-`;
                     const startDate = new Date(year, month - 1, 1);
                     const endDate = new Date(year, month, 1);
                     dateFilter = {
-                        created_at: {
-                            gte: startDate,
-                            lt: endDate,
-                        },
+                        OR: [
+                            { lessonDate: { startsWith: prefix } },
+                            {
+                                AND: [
+                                    { lessonDate: null },
+                                    {
+                                        created_at: {
+                                            gte: startDate,
+                                            lt: endDate,
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
                     };
                 }
             } else {
-                // Aniq bir yilni filter qilish
+                const prefix = `${year}-`;
                 const startDate = new Date(year, 0, 1);
                 const endDate = new Date(year + 1, 0, 1);
                 dateFilter = {
-                    created_at: {
-                        gte: startDate,
-                        lt: endDate,
-                    },
+                    OR: [
+                        { lessonDate: { startsWith: prefix } },
+                        {
+                            AND: [
+                                { lessonDate: null },
+                                {
+                                    created_at: {
+                                        gte: startDate,
+                                        lt: endDate,
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 };
             }
         }
