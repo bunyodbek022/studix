@@ -27,10 +27,16 @@ export class CourseService {
             throw new ConflictException('Bu nomdagi kurs allaqachon mavjud');
         }
 
+        const cleanPrice = dto.price.toString().replace(/,/g, '').replace(/\s/g, '');
+
         const course = await this.prisma.course.create({
             data: {
-                ...dto,
-                price: dto.price,
+                name: dto.name,
+                durationMonth: dto.durationMonth,
+                durationLesson: dto.durationLesson,
+                price: cleanPrice,
+                level: dto.level,
+                description: dto.description,
                 branchId,
             },
         });
@@ -118,9 +124,14 @@ export class CourseService {
             }
         }
 
+        const data: any = { ...dto };
+        if (dto.price) {
+            data.price = dto.price.toString().replace(/,/g, '').replace(/\s/g, '');
+        }
+
         const updated = await this.prisma.course.update({
             where: { id },
-            data: dto,
+            data,
         });
 
         return {
