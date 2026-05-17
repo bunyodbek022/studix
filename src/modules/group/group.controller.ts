@@ -26,7 +26,6 @@ import {
     ApiQuery,
 } from '@nestjs/swagger';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
-import { GroupLessonsQueryDto } from './dto/group-lessons-query.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Controller('groups')
@@ -100,14 +99,12 @@ export class GroupsController {
     @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
         summary: "Guruh darslari tarixi",
-        description: "Guruh uchun o'tilgan darslar ro'yxatini oylar/yillar bo'yicha yoki sahifalab qaytaradi.\n\n" +
+        description: "Guruh uchun o'tilgan darslar ro'yxatini sahifalab va dars mavzusi bo'yicha qidirib qaytaradi.\n\n" +
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
-    @ApiQuery({ name: 'month', required: false, type: Number, example: 5 })
-    @ApiQuery({ name: 'year', required: false, type: Number, example: 2026 })
     @ApiQuery({
         name: 'search',
         required: false,
@@ -116,7 +113,7 @@ export class GroupsController {
     })
     getLessons(
         @Param('id', ParseIntPipe) id: number,
-        @Query() query: GroupLessonsQueryDto,
+        @Query() query: PaginationSearchDto,
     ) {
         return this.groupService.getLessons(id, query);
     }
@@ -131,6 +128,24 @@ export class GroupsController {
     @ApiParam({ name: 'id', type: Number, example: 1 })
     getSchedule(@Param('id', ParseIntPipe) id: number) {
     return this.groupService.getSchedule(id);
+    }
+
+    @Get(':id/attendance-days')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+    @ApiOperation({
+        summary: "Oy va yil boyicha guruhning dars kunlari ro'yxati (Davomat uchun)",
+        description: "Guruh dars kunlarini ma'lum bir oy va yil bo'yicha olib beradi (kelgusi va o'tgan darslar bilan birga).\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    @ApiQuery({ name: 'month', required: true, type: Number, example: 5, description: "Oy (1-12)" })
+    @ApiQuery({ name: 'year', required: false, type: Number, example: 2026, description: "Yil (kiritilmasa joriy yil olinadi)" })
+    getAttendanceDays(
+        @Param('id', ParseIntPipe) id: number,
+        @Query('month', ParseIntPipe) month: number,
+        @Query('year') year?: string,
+    ) {
+        return this.groupService.getAttendanceDays(id, month, year ? +year : undefined);
     }
     
 

@@ -9,7 +9,6 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { Role, Status, WeekDays } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
-import { GroupLessonsQueryDto } from './dto/group-lessons-query.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Injectable()
@@ -198,8 +197,8 @@ export class GroupsService {
         };
     }
 
-    async getLessons(id: number, query: GroupLessonsQueryDto) {
-        const { page = 1, limit = 10, search, month, year } = query;
+    async getLessons(id: number, query: PaginationSearchDto) {
+        const { page = 1, limit = 10, search } = query;
         const skip = (page - 1) * limit;
 
         const group = await this.prisma.group.findUnique({ where: { id } });
@@ -207,31 +206,8 @@ export class GroupsService {
             throw new NotFoundException(`Guruh topilmadi: ${id}`);
         }
 
-        const yearVal = year ?? new Date().getFullYear();
-        let dateFilter = {};
-        if (month) {
-            const startDate = new Date(yearVal, month - 1, 1);
-            const endDate = new Date(yearVal, month, 1);
-            dateFilter = {
-                created_at: {
-                    gte: startDate,
-                    lt: endDate,
-                },
-            };
-        } else if (year) {
-            const startDate = new Date(yearVal, 0, 1);
-            const endDate = new Date(yearVal + 1, 0, 1);
-            dateFilter = {
-                created_at: {
-                    gte: startDate,
-                    lt: endDate,
-                },
-            };
-        }
-
         const where = {
             groupId: id,
-            ...dateFilter,
             ...(search && {
                 title: { contains: search, mode: 'insensitive' as const },
             }),
@@ -378,6 +354,99 @@ export class GroupsService {
                 startTime: group.startTime,
                 durationLesson: group.course.durationLesson,
                 scheduleDays,
+            },
+        };
+    }
+
+    async getAttendanceDays(id: number, month: number, year?: number) {
+        const group = await this.prisma.group.findUnique({
+            where: { id },
+            include: {
+                course: { select: { durationMonth: true, durationLesson: true } },
+                lesson: {
+                    select: { 
+                        id: true, 
+                        title: true, 
+                        created_at: true,
+                        lessonVideo: {
+                            select: {
+                                id: true,
+                                title: true,
+                                file: true,
+                                created_at: true
+                            }
+                        }
+                    },
+                    orderBy: { created_at: 'asc' },
+                },
+            },
+        });
+
+        if (!group) {
+            throw new NotFoundException(`Guruh topilmadi: ${id}`);
+        }
+
+        const WEEK_DAY_MAP: Record<string, number> = {
+            SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3,
+            THURSDAY: 4, FRIDAY: 5, SATURDAY: 6,
+        };
+
+        const startDate = new Date(group.startDate);
+        const endDate = new Date(startDate);
+        endDate.setMonth(endDate.getMonth() + group.course.durationMonth);
+
+        const scheduleDays: {
+            date: string;
+            dayLabel: string;
+            monthLabel: string;
+            isWeekend: boolean;
+            lesson: { id: number; title: string, lessonVideo: any[] } | null;
+        }[] = [];
+
+        const lessonDateMap = new Map<string, { id: number; title: string, lessonVideo: any[] }>();
+        for (const lesson of group.lesson) {
+            const dateKey = new Date(lesson.created_at).toISOString().split('T')[0];
+            lessonDateMap.set(dateKey, { id: lesson.id, title: lesson.title, lessonVideo: lesson.lessonVideo });
+        }
+
+        const current = new Date(startDate);
+        while (current <= endDate) {
+            const dayOfWeek = current.getDay();
+            const isClassDay = group.weekDays.some(
+                (day) => WEEK_DAY_MAP[day] === dayOfWeek,
+            );
+
+            if (isClassDay) {
+                const dateKey = current.toISOString().split('T')[0];
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+                scheduleDays.push({
+                    date: dateKey,
+                    dayLabel: current.getDate().toString().padStart(2, '0'),
+                    monthLabel: current.toLocaleString('uz-UZ', { month: 'short' }),
+                    isWeekend,
+                    lesson: lessonDateMap.get(dateKey) || null,
+                });
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
+        // Faqat so'ralgan oy va yil kunlarini ajratib olish
+        const targetYear = year ?? new Date().getFullYear();
+        const filteredScheduleDays = scheduleDays.filter(day => {
+            const dayDate = new Date(day.date);
+            return (dayDate.getMonth() + 1) === month && dayDate.getFullYear() === targetYear;
+        });
+
+        return {
+            success: true,
+            data: {
+                groupId: group.id,
+                groupName: group.name,
+                startTime: group.startTime,
+                durationLesson: group.course.durationLesson,
+                scheduleDays: filteredScheduleDays,
             },
         };
     }
