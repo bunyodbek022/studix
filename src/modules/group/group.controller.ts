@@ -26,6 +26,7 @@ import {
     ApiQuery,
 } from '@nestjs/swagger';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
+import { GroupLessonsQueryDto } from './dto/group-lessons-query.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Controller('groups')
@@ -99,12 +100,14 @@ export class GroupsController {
     @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
         summary: "Guruh darslari tarixi",
-        description: "Guruh uchun o'tilgan darslar ro'yxatini sahifalab va dars mavzusi bo'yicha qidirib qaytaradi.\n\n" +
+        description: "Guruh uchun o'tilgan darslar ro'yxatini oylar/yillar bo'yicha yoki sahifalab qaytaradi.\n\n" +
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+    @ApiQuery({ name: 'month', required: false, type: Number, example: 5 })
+    @ApiQuery({ name: 'year', required: false, type: Number, example: 2026 })
     @ApiQuery({
         name: 'search',
         required: false,
@@ -113,7 +116,7 @@ export class GroupsController {
     })
     getLessons(
         @Param('id', ParseIntPipe) id: number,
-        @Query() query: PaginationSearchDto,
+        @Query() query: GroupLessonsQueryDto,
     ) {
         return this.groupService.getLessons(id, query);
     }

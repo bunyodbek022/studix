@@ -9,6 +9,7 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { Role, Status, WeekDays } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
+import { GroupLessonsQueryDto } from './dto/group-lessons-query.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Injectable()
@@ -197,8 +198,8 @@ export class GroupsService {
         };
     }
 
-    async getLessons(id: number, query: PaginationSearchDto) {
-        const { page = 1, limit = 10, search } = query;
+    async getLessons(id: number, query: GroupLessonsQueryDto) {
+        const { page = 1, limit = 10, search, month, year } = query;
         const skip = (page - 1) * limit;
 
         const group = await this.prisma.group.findUnique({ where: { id } });
@@ -206,8 +207,31 @@ export class GroupsService {
             throw new NotFoundException(`Guruh topilmadi: ${id}`);
         }
 
+        const yearVal = year ?? new Date().getFullYear();
+        let dateFilter = {};
+        if (month) {
+            const startDate = new Date(yearVal, month - 1, 1);
+            const endDate = new Date(yearVal, month, 1);
+            dateFilter = {
+                created_at: {
+                    gte: startDate,
+                    lt: endDate,
+                },
+            };
+        } else if (year) {
+            const startDate = new Date(yearVal, 0, 1);
+            const endDate = new Date(yearVal + 1, 0, 1);
+            dateFilter = {
+                created_at: {
+                    gte: startDate,
+                    lt: endDate,
+                },
+            };
+        }
+
         const where = {
             groupId: id,
+            ...dateFilter,
             ...(search && {
                 title: { contains: search, mode: 'insensitive' as const },
             }),
