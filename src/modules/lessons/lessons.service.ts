@@ -190,4 +190,80 @@ export class LessonsService {
             message: "Lesson deleted successfully"
         };
     }
+
+    async getLessonsByDate(groupId: number, year?: number, month?: number, day?: number) {
+        const existGroup = await this.prisma.group.findUnique({
+            where: { id: groupId }
+        });
+
+        if (!existGroup) {
+            throw new NotFoundException("Group not found with this id");
+        }
+
+        let dateFilter = {};
+        if (year) {
+            if (month) {
+                if (day) {
+                    // Aniq bir kunni filter qilish
+                    const startDate = new Date(year, month - 1, day, 0, 0, 0);
+                    const endDate = new Date(year, month - 1, day, 23, 59, 59);
+                    dateFilter = {
+                        created_at: {
+                            gte: startDate,
+                            lte: endDate,
+                        },
+                    };
+                } else {
+                    // Aniq bir oyni filter qilish
+                    const startDate = new Date(year, month - 1, 1);
+                    const endDate = new Date(year, month, 1);
+                    dateFilter = {
+                        created_at: {
+                            gte: startDate,
+                            lt: endDate,
+                        },
+                    };
+                }
+            } else {
+                // Aniq bir yilni filter qilish
+                const startDate = new Date(year, 0, 1);
+                const endDate = new Date(year + 1, 0, 1);
+                dateFilter = {
+                    created_at: {
+                        gte: startDate,
+                        lt: endDate,
+                    },
+                };
+            }
+        }
+
+        const lessons = await this.prisma.lesson.findMany({
+            where: {
+                groupId,
+                ...dateFilter,
+            },
+            include: {
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                    },
+                },
+                lessonVideo: {
+                    select: {
+                        id: true,
+                        title: true,
+                        file: true,
+                        created_at: true,
+                    },
+                },
+            },
+            orderBy: { created_at: 'asc' },
+        });
+
+        return {
+            success: true,
+            data: lessons,
+        };
+    }
 }
