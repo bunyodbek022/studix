@@ -368,7 +368,7 @@ export class GroupsService {
 
         const existCourse = await this.prisma.course.findFirst({
             where: { id: payload.courseId, status: Status.ACTIVE },
-            select: { durationLesson: true },
+            select: { durationLesson: true, branchId: true },
         });
         if (!existCourse) {
             throw new NotFoundException('Course not found with this id');
@@ -381,8 +381,22 @@ export class GroupsService {
             throw new NotFoundException('Room not found with this id');
         }
 
+        if (existTeacher.branchId !== existRoom.branchId) {
+            throw new BadRequestException("O'qituvchi boshqa filialga tegishli");
+        }
+
+        if (existCourse.branchId !== existRoom.branchId) {
+            throw new BadRequestException("Kurs boshqa filialga tegishli");
+        }
+
         const existGroup = await this.prisma.group.findUnique({
-            where: { courseId_name: { name: payload.name, courseId: payload.courseId } },
+            where: {
+                courseId_name_branchId: {
+                    name: payload.name,
+                    courseId: payload.courseId,
+                    branchId: existRoom.branchId,
+                },
+            },
         });
         if (existGroup) {
             throw new ConflictException('Group already exist with this course');
@@ -430,6 +444,7 @@ export class GroupsService {
         await this.prisma.group.create({
             data: {
                 ...payload,
+                branchId: existRoom.branchId,
                 userId: currentUser.id,
                 startDate: new Date(payload.startDate),
             },
@@ -453,6 +468,7 @@ export class GroupsService {
                 startTime: true,
                 weekDays: true,
                 status: true,
+                branchId: true,
             },
         });
 
@@ -481,15 +497,21 @@ export class GroupsService {
             if (!existTeacher) {
                 throw new NotFoundException('Teacher not found with this id');
             }
+            if (existTeacher.branchId !== group.branchId) {
+                throw new BadRequestException("O'qituvchi boshqa filialga tegishli");
+            }
         }
 
         // Course tekshirish
         const existCourse = await this.prisma.course.findFirst({
             where: { id: courseId, status: Status.ACTIVE },
-            select: { durationLesson: true },
+            select: { durationLesson: true, branchId: true },
         });
         if (!existCourse) {
             throw new NotFoundException('Course not found with this id');
+        }
+        if (existCourse.branchId !== group.branchId) {
+            throw new BadRequestException("Kurs boshqa filialga tegishli");
         }
 
         // Room tekshirish
@@ -500,13 +522,16 @@ export class GroupsService {
             if (!existRoom) {
                 throw new NotFoundException('Room not found with this id');
             }
+            if (existRoom.branchId !== group.branchId) {
+                throw new BadRequestException("Xona boshqa filialga tegishli");
+            }
         }
 
         // Guruh nomi unique tekshirish (o'zi bundan mustasno)
         if (payload.name && payload.name !== group.name) {
             const existGroup = await this.prisma.group.findUnique({
                 where: {
-                    courseId_name: { name, courseId },
+                    courseId_name_branchId: { name, courseId, branchId: group.branchId },
                 },
             });
             if (existGroup) {
@@ -570,7 +595,7 @@ export class GroupsService {
     async archive(id: number) {
         const group = await this.prisma.group.findUnique({
             where: { id },
-            select: { id: true, status: true, name: true },
+            select: { id: true, status: true, name: true, branchId: true },
         });
 
         if (!group) {
@@ -591,6 +616,7 @@ export class GroupsService {
                 groupId: id,
                 type: 'ARCHIVED',
                 description: `Guruh (${group.name}) arxivga o'tkazildi`,
+                branchId: group.branchId,
             },
         });
 
@@ -603,7 +629,7 @@ export class GroupsService {
     async restore(id: number) {
         const group = await this.prisma.group.findUnique({
             where: { id },
-            select: { id: true, status: true, name: true },
+            select: { id: true, status: true, name: true, branchId: true },
         });
 
         if (!group) {
@@ -624,6 +650,7 @@ export class GroupsService {
                 groupId: id,
                 type: 'RESTORED',
                 description: `Guruh (${group.name}) arxivdan qayta faollashtirildi`,
+                branchId: group.branchId,
             },
         });
 
@@ -636,7 +663,7 @@ export class GroupsService {
     async remove(id: number) {
         const group = await this.prisma.group.findUnique({
             where: { id },
-            select: { id: true, status: true, name: true },
+            select: { id: true, status: true, name: true, branchId: true },
         });
 
         if (!group) {
@@ -667,6 +694,7 @@ export class GroupsService {
                 groupId: id,
                 type: 'DELETED',
                 description: `Guruh (${group.name}) tizimdan o'chirildi`,
+                branchId: group.branchId,
             },
         });
 

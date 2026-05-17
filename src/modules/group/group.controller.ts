@@ -19,6 +19,7 @@ import { Roles } from 'src/common/decorators/role.decorator';
 import { CreateGroupDto } from './dto/create-group.dto';
 import {
     ApiBearerAuth,
+    ApiBody,
     ApiCookieAuth,
     ApiOperation,
     ApiParam,
@@ -33,36 +34,51 @@ export class GroupsController {
     constructor(private readonly groupService: GroupsService) { }
 
     @ApiOperation({
-        summary: `${Role.SUPERADMIN}, ${Role.ADMIN}, ${Role.TEACHER}`,
+        summary: "Guruh darslari ro'yxatini ko'rish",
+        description: "Guruhdagi barcha darslarni dars kunlari va soatlari bilan qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
     })
     @UseGuards(AuthGuard, RolesGuard)
-    @Roles('ADMIN', 'SUPERADMIN', 'TEACHER')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
     @Get('lesson/:groupId')
     getGroupLessons(
         @Param('groupId', ParseIntPipe) groupId: number,
-        @Req() req: Request,
+        @Req() req: any,
     ) {
         return this.groupService.getGroupLessons(groupId, req['user']);
     }
 
     @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @Get()
+    @ApiOperation({
+        summary: "Barcha faol guruhlar ro'yxati",
+        description: "Tizimdagi barcha faol guruhlar ro'yxatini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     getAllGroup() {
         return this.groupService.getAllGroup();
     }
 
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Guruh detallari' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruh ma'lumotlarini ko'rish",
+        description: "Muayyan guruh tafsilotlarini uning unikal ID raqami bo'yicha qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.groupService.findOne(id);
     }
 
     @Get(':id/students')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "Guruh studentlari ro'yxati" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruhdagi o'quvchilar ro'yxati",
+        description: "Guruhdagi barcha o'quvchilarni sahifalab (pagination) va ism bo'yicha qidiruv filtri bilan qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -80,8 +96,12 @@ export class GroupsController {
     }
 
     @Get(':id/lessons')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "Guruh darslari ro'yxati" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruh darslari tarixi",
+        description: "Guruh uchun o'tilgan darslar ro'yxatini sahifalab va dars mavzusi bo'yicha qidirib qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -99,48 +119,74 @@ export class GroupsController {
     }
 
     @Get(':id/schedule')
-@Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-@ApiOperation({ summary: 'Guruh dars kunlari jadvali' })
-@ApiParam({ name: 'id', type: Number, example: 1 })
-getSchedule(@Param('id', ParseIntPipe) id: number) {
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruh dars kunlari jadvali",
+        description: "Guruhning dars jadvali, haftalik kunlari va dars soatlarini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    getSchedule(@Param('id', ParseIntPipe) id: number) {
     return this.groupService.getSchedule(id);
     }
     
 
     @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @Post()
-    createGroup(@Body() payload: CreateGroupDto, @Req() req: Request) {
+    @ApiOperation({
+        summary: "Yangi guruh yaratish",
+        description: "Yangi o'quv guruhini yaratadi. Kurs ID, xona ID, o'qituvchi ID va haftalik kunlar kiritiladi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
+    createGroup(@Body() payload: CreateGroupDto, @Req() req: any) {
         return this.groupService.createGroup(payload, req['user']);
     }
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Guruhni yangilash' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruhni yangilash",
+        description: "Mavjud guruh sozlamalarini (nomi, o'qituvchisi, xonasi, dars soati) yangilaydi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
+    @ApiBody({ type: UpdateGroupDto })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateGroupDto) {
         return this.groupService.updateGroup(id, dto);
     }
 
     @Patch(':id/archive')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "Guruhni arxivga o'tkazish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruhni arxivga o'tkazish",
+        description: "Guruhni arxiv (INACTIVE) holatiga o'tkazadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     archive(@Param('id', ParseIntPipe) id: number) {
         return this.groupService.archive(id);
     }
 
     @Patch(':id/restore')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Guruhni arxivdan qayta faollashtirish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruhni arxivdan qayta faollashtirish",
+        description: "Arxivlangan guruhni faol (ACTIVE) holatga qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     restore(@Param('id', ParseIntPipe) id: number) {
         return this.groupService.restore(id);
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: "Guruhni butunlay o'chirish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruhni butunlay o'chirish (DELETED)",
+        description: "Guruhni o'chirib yubormaydi, balki uning statusini DELETED holatiga o'tkazadi va guruhdagi barcha o'quvchilarni chiqarib yuboradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.groupService.remove(id);

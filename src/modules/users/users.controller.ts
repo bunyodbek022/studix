@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,7 +13,7 @@ import { Roles } from 'src/common/decorators/role.decorator';
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
 @ApiCookieAuth('access_token')
-@Roles(Role.ADMIN, Role.SUPERADMIN)
+@Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
@@ -23,10 +23,10 @@ export class UsersController {
     create(
         @Body() createUserDto: CreateUserDto,
         @UploadedFile() file: Express.Multer.File,
-
+        @Req() req: any,
     ) {
         const imagePath = file ? file.filename : undefined;
-        return this.usersService.create({ ...createUserDto, photo: imagePath });
+        return this.usersService.create({ ...createUserDto, photo: imagePath }, req['user']);
     }
 
     @Get()

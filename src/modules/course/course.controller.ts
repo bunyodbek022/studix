@@ -37,16 +37,24 @@ export class CourseController {
     constructor(private readonly courseService: CourseService) { }
 
     @Post()
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'Yangi kurs yaratish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR)
+    @ApiOperation({
+        summary: 'Yangi kurs yaratish',
+        description: "Yangi kurs yaratadi. Nomi branch bo'yicha unikal bo'lishi lozim.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`"
+    })
     @ApiBody({ type: CreateCourseDto })
-    create(@Body() dto: CreateCourseDto) {
-        return this.courseService.create(dto);
+    create(@Body() dto: CreateCourseDto, @Req() req: any) {
+        return this.courseService.create(dto, req['user']);
     }
 
     @Get()
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Barcha kurslar ro\'yxati' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Barcha kurslar ro'yxati",
+        description: "Tizimdagi barcha kurslarni sahifalab (pagination) va qidiruv (search) filtri bilan qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'Node' })
@@ -56,16 +64,24 @@ export class CourseController {
     }
 
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Kursni ID bo\'yicha ko\'rish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Kursni ID bo'yicha ko'rish",
+        description: "Kurs ma'lumotlarini uning unikal ID raqami bo'yicha qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.courseService.findOne(id);
     }
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'Kursni yangilash' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR)
+    @ApiOperation({
+        summary: 'Kursni yangilash',
+        description: "Kurs ma'lumotlarini yangilaydi. Nom o'zgarsa, yangi nom unikal bo'lishi tekshiriladi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiBody({ type: UpdateCourseDto })
     update(
@@ -76,16 +92,24 @@ export class CourseController {
     }
 
     @Patch(':id/restore')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'Kursni arxivdan qayta faollashtirish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR)
+    @ApiOperation({
+        summary: 'Kursni arxivdan qayta faollashtirish',
+        description: "Arxivlangan (INACTIVE) kurs statusini faol (ACTIVE) holatga o'tkazadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     restore(@Param('id', ParseIntPipe) id: number) {
         return this.courseService.restore(id);
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'Kursni o\'chirish (INACTIVE)' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR)
+    @ApiOperation({
+        summary: "Kursni o'chirish (Arxivlash)",
+        description: "Kursni tizimdan o'chirmaydi, balki uning statusini INACTIVE (arxiv) holatga keltirib qo'yadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.courseService.remove(id);

@@ -13,9 +13,14 @@ import { FindAllCoursesDto } from './dto/find-all-courses.dto';
 export class CourseService {
     constructor(private prisma: PrismaService) { }
 
-    async create(dto: CreateCourseDto) {
-        const existing = await this.prisma.course.findUnique({
-            where: { name: dto.name },
+    async create(dto: CreateCourseDto, currentUser?: { branchId?: number }) {
+        const branchId = dto.branchId ?? currentUser?.branchId;
+        if (!branchId) {
+            throw new BadRequestException('Branch ID is required');
+        }
+
+        const existing = await this.prisma.course.findFirst({
+            where: { name: dto.name, branchId },
         });
 
         if (existing) {
@@ -26,6 +31,7 @@ export class CourseService {
             data: {
                 ...dto,
                 price: dto.price,
+                branchId,
             },
         });
 
@@ -104,8 +110,8 @@ export class CourseService {
 
         // Nom o'zgarsa — unique tekshirish
         if (dto.name && dto.name !== course.name) {
-            const existing = await this.prisma.course.findUnique({
-                where: { name: dto.name },
+            const existing = await this.prisma.course.findFirst({
+                where: { name: dto.name, branchId: course.branchId },
             });
             if (existing) {
                 throw new ConflictException('Bu nomdagi kurs allaqachon mavjud');
@@ -155,6 +161,20 @@ export class CourseService {
 
         if (course.status === 'INACTIVE') {
             throw new ConflictException('Bu kurs allaqachon INACTIVE');
+        }
+
+        // Kursga bog'langan aktiv guruhlar bormi tekshirish
+        const activeGroupsCount = await this.prisma.group.count({
+            where: {
+                courseId: id,
+                status: 'ACTIVE',
+            },
+        });
+
+        if (activeGroupsCount > 0) {
+            throw new BadRequestException(
+                `Kursni o'chirish uchun avval ushbu kursga tegishli ${activeGroupsCount} ta faol guruhni o'chiring yoki boshqa kursga o'tkazing`,
+            );
         }
 
         await this.prisma.course.update({

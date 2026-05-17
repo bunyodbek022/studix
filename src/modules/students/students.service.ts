@@ -34,9 +34,14 @@ export class StudentsService {
         return `${baseUrl}/uploads/${filename}`;
     }
 
-    async create(dto: CreateStudentDto, file?: Express.Multer.File) {
-        const exists = await this.prisma.student.findUnique({
-            where: { email: dto.email },
+    async create(dto: CreateStudentDto, file?: Express.Multer.File, currentUser?: { branchId?: number }) {
+        const branchId = dto.branchId ?? currentUser?.branchId;
+        if (!branchId) {
+            throw new BadRequestException('Branch ID is required');
+        }
+
+        const exists = await this.prisma.student.findFirst({
+            where: { email: dto.email, branchId },
         });
 
         if (exists) {
@@ -52,6 +57,7 @@ export class StudentsService {
                 birth_date: new Date(dto.birth_date),
                 password: hashedPassword,
                 photo: this.buildPhotoUrl(file?.filename),
+                branchId,
             },
             select: SELECT_STUDENT,
         });
@@ -353,7 +359,7 @@ export class StudentsService {
     async archive(id: number) {
         const student = await this.prisma.student.findUnique({
             where: { id },
-            select: { id: true, status: true, fullName: true },
+            select: { id: true, status: true, fullName: true, branchId: true },
         });
 
         if (!student) {
@@ -364,9 +370,12 @@ export class StudentsService {
             throw new BadRequestException('Bu student allaqachon arxivda');
         }
 
-        if (student.status === 'DELETED') {
-            throw new BadRequestException('Bu student o\'chirilgan');
-        }
+        // Active guruhlarni aniqlash
+        const activeStudentGroups = await this.prisma.studentGroup.findMany({
+            where: { studentId: id, status: Status.ACTIVE },
+            select: { groupId: true },
+        });
+        const activeGroupIds = activeStudentGroups.map((sg) => sg.groupId);
 
         // StudentGroup larni INACTIVE qilish
         await this.prisma.studentGroup.updateMany({
@@ -388,7 +397,8 @@ export class StudentsService {
             data: {
                 studentId: id,
                 type: 'ARCHIVED',
-                description: `Student (${student.fullName}) arxivga o'tkazildi. Barcha guruhlardagi statusi INACTIVE qilindi`,
+                description: `Student (${student.fullName}) arxivga o'tkazildi. Barcha guruhlardagi statusi INACTIVE qilindi. Guruhlar: ${JSON.stringify(activeGroupIds)}`,
+                branchId: student.branchId,
             },
         });
 
@@ -401,7 +411,7 @@ export class StudentsService {
     async restore(id: number) {
         const student = await this.prisma.student.findUnique({
             where: { id },
-            select: { id: true, status: true, fullName: true },
+            select: { id: true, status: true, fullName: true, branchId: true },
         });
 
         if (!student) {
@@ -412,18 +422,50 @@ export class StudentsService {
             throw new BadRequestException('Bu student arxivda emas');
         }
 
-        await this.prisma.student.update({
-            where: { id },
-            data: { status: 'ACTIVE' },
+        // Oxirgi arxivlangan tarixni topib, guruhlarni tiklash
+        const lastArchivedHistory = await this.prisma.studentHistory.findFirst({
+            where: { studentId: id, type: 'ARCHIVED' },
+            orderBy: { created_at: 'desc' },
         });
 
-        // Tarixga saqlash
-        await this.prisma.studentHistory.create({
-            data: {
-                studentId: id,
-                type: 'RESTORED',
-                description: `Student (${student.fullName}) arxivdan qayta faollashtirildi`,
-            },
+        let groupsToRestore: number[] = [];
+        if (lastArchivedHistory && lastArchivedHistory.description) {
+            try {
+                const match = lastArchivedHistory.description.match(/Guruhlar: (\[.*\])/);
+                if (match && match[1]) {
+                    groupsToRestore = JSON.parse(match[1]);
+                }
+            } catch (e) {
+                console.error("Failed to parse archived groups list:", e);
+            }
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            await tx.student.update({
+                where: { id },
+                data: { status: 'ACTIVE' },
+            });
+
+            if (groupsToRestore.length > 0) {
+                await tx.studentGroup.updateMany({
+                    where: {
+                        studentId: id,
+                        groupId: { in: groupsToRestore },
+                        status: Status.INACTIVE,
+                    },
+                    data: { status: Status.ACTIVE },
+                });
+            }
+
+            // Tarixga saqlash
+            await tx.studentHistory.create({
+                data: {
+                    studentId: id,
+                    type: 'RESTORED',
+                    description: `Student (${student.fullName}) arxivdan qayta faollashtirildi. Tiklangan guruhlar soni: ${groupsToRestore.length}`,
+                    branchId: student.branchId,
+                },
+            });
         });
 
         return {
@@ -435,7 +477,7 @@ export class StudentsService {
     async remove(id: number) {
         const student = await this.prisma.student.findUnique({
             where: { id },
-            select: { id: true, status: true, fullName: true },
+            select: { id: true, status: true, fullName: true, branchId: true },
         });
 
         if (!student) {
@@ -466,6 +508,7 @@ export class StudentsService {
                 studentId: id,
                 type: 'DELETED',
                 description: `Student (${student.fullName}) tizimdan o'chirildi. Barcha guruhlardan olib tashlandi`,
+                branchId: student.branchId,
             },
         });
 

@@ -14,44 +14,58 @@ import { SaveAttendanceDto } from './dto/save-attendance.dto';
 export class LessonsController {
     constructor(private readonly lessonService: LessonsService) { }
 
-    @ApiOperation({
-        summary: `${Role.SUPERADMIN}, ${Role.ADMIN}, ${Role.TEACHER}`
-    })
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles("ADMIN", "SUPERADMIN", "TEACHER")
     @Post()
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Guruh uchun yangi dars yaratish",
+        description: "Muayyan guruh uchun yangi dars yaratadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     createLesson(
         @Body() payload: CreateLessonDto,
-        @Req() req: Request
+        @Req() req: any
     ) {
         return this.lessonService.createLesson(payload, req["user"])
     }
 
     @Post(':id/attendance')
-    @UseGuards(AuthGuard, RolesGuard)  // ← bu yo'q edi!
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR, Role.TEACHER)
-    @ApiOperation({ summary: 'Dars davomatini saqlash' })
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+    @ApiOperation({
+        summary: "Dars davomatini saqlash",
+        description: "Talabalarning darsga qatnashganligi yoki qatnashmaganligi (davomat) holatini saqlaydi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     @ApiBody({ type: SaveAttendanceDto })
     saveAttendance(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: SaveAttendanceDto,
-        @Req() req: Request,
+        @Req() req: any,
     ) {
         return this.lessonService.saveAttendance(id, dto, req['user']);
     }
 
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Dars detayllari' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Dars tafsilotlarini ko'rish",
+        description: "Muayyan dars ma'lumotlarini uning unikal ID raqami bo'yicha qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.lessonService.findOne(id);
     }
 
     @Get(':id/attendance')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR, Role.TEACHER)
-    @ApiOperation({ summary: 'Dars davomati ro\'yxati' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+    @ApiOperation({
+        summary: "Dars davomati ro'yxati",
+        description: "Dars bo'yicha barcha talabalarning davomat natijalari ro'yxatini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     getAttendance(@Param('id', ParseIntPipe) id: number) {
         return this.lessonService.getAttendance(id);
@@ -59,8 +73,12 @@ export class LessonsController {
 
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Darsni yangilash' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Darsni yangilash",
+        description: "Dars mavzusi yoki boshqa dars tafsilotlarini yangilaydi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     update(
         @Param('id', ParseIntPipe) id: number,
@@ -70,8 +88,12 @@ export class LessonsController {
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: 'Darsni o\'chirish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Darsni tizimdan o'chirish",
+        description: "Darsni tizimdan butunlay o'chirib yuboradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.lessonService.remove(id);

@@ -4,8 +4,6 @@ import type { LabelDefinition } from './labels.types';
 const STAFF_ROLES = [
   Role.SUPERADMIN,
   Role.ADMIN,
-  Role.MANAGEMENT,
-  Role.ADMINISTRATOR,
 ] as const;
 
 const STAFF_AND_TEACHER_ROLES = [...STAFF_ROLES, Role.TEACHER] as const;

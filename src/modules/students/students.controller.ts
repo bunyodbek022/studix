@@ -7,6 +7,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Req,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -21,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
+import { Request } from 'express';
 
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -28,6 +30,9 @@ import { UpdateStudentDto } from './dto/update-student.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
+import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PermissionsGuard } from 'src/common/guards/permission.guard';
+import { Label, RoleActions } from '@prisma/client';
 import { multerConfig } from 'src/common/config/multer.config';
 
 @ApiTags('Students')
@@ -38,9 +43,15 @@ export class StudentsController {
     constructor(private readonly studentsService: StudentsService) { }
 
     @Post()
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "Yangi o'quvchi qo'shish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.CREATE)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "Yangi o'quvchi qo'shish",
+        description: "Yangi talaba (o'quvchi) yaratadi va tizimga qo'shadi. Rasm yuklash (photo) va branchId yozish imkoniyati bor.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n" +
+                     "**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `CREATE`"
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -58,35 +69,48 @@ export class StudentsController {
     @UseInterceptors(FileInterceptor('photo', multerConfig))
     create(
         @Body() dto: CreateStudentDto,
+        @Req() req: any,
         @UploadedFile() file?: Express.Multer.File,
     ) {
-        return this.studentsService.create(dto, file);
+        return this.studentsService.create(dto, file, req['user']);
     }
 
     @Get()
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "Barcha o'quvchilarni ko'rish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.READ)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "Barcha o'quvchilarni ko'rish",
+        description: "Tizimdagi barcha faol o'quvchilar ro'yxatini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n" +
+                     "**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`"
+    })
     findAll() {
         return this.studentsService.findAll();
     }
 
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "O'quvchini ID bo'yicha ko'rish (guruhlari bilan)" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.READ)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "O'quvchini ID bo'yicha ko'rish",
+        description: "O'quvchining shaxsiy ma'lumotlarini va u a'zo bo'lgan guruhlarni uning ID raqami orqali qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n" +
+                     "**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`"
+    })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.findOne(id);
     }
 
     @Get(':id/group-summary')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @UseGuards(AuthGuard, RolesGuard)
     @ApiOperation({
-        summary: 'Get student group summary',
+        summary: "O'quvchining guruhlardagi umumiy faoliyati",
         description:
-            'Student detail sahifasidagi guruhlar jadvali uchun. ' +
-            'Har bir guruh boyicha fan, oqituvchi, davomat, homework va dars sonini qaytaradi.',
+            "O'quvchining detail sahifasidagi guruhlar jadvali uchun har bir guruh bo'yicha fan, o'qituvchi, davomat foizi, vazifalar (homework) va darslar sonini qaytaradi.\n\n" +
+            "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({
         name: 'id',
@@ -99,19 +123,24 @@ export class StudentsController {
     }
 
     @Get(':id/groups')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "O'quvchining guruhlari" })
+    @ApiOperation({
+        summary: "O'quvchi a'zo bo'lgan guruhlar",
+        description: "Berilgan o'quvchi biriktirilgan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     getGroups(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.getGroups(id);
     }
 
     @Get(':studentId/groups/:groupId/attendance-details')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
-        summary: 'Student davomat detallari',
+        summary: "O'quvchi davomat detallari",
         description:
-            "Berilgan guruh bo'yicha studentning qoldirgan darslari ro'yxati",
+            "Berilgan guruh bo'yicha o'quvchining qoldirgan darslari va sababli/sababsiz davomat ma'lumotlari ro'yxatini qaytaradi.\n\n" +
+            "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'studentId', type: Number, example: 12 })
     @ApiParam({ name: 'groupId', type: Number, example: 2 })
@@ -123,11 +152,12 @@ export class StudentsController {
     }
 
     @Get(':studentId/groups/:groupId/homeworks')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
-        summary: "Student vazifalar ro'yxati",
+        summary: "O'quvchining vazifalar (homework) ro'yxati",
         description:
-            "Berilgan guruh bo'yicha studentning barcha vazifalari va natijalari",
+            "Berilgan guruh bo'yicha o'quvchining barcha uy vazifalari, topshiriq topshirganlik holati va baholari/natijalari ro'yxatini qaytaradi.\n\n" +
+            "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'studentId', type: Number, example: 12 })
     @ApiParam({ name: 'groupId', type: Number, example: 2 })
@@ -139,9 +169,13 @@ export class StudentsController {
     }
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({ summary: "O'quvchi ma'lumotlarini yangilash" })
+    @ApiOperation({
+        summary: "O'quvchi ma'lumotlarini yangilash",
+        description: "O'quvchining shaxsiy ma'lumotlarini (ismi, emaili, paroli, tug'ilgan kuni, rasmi) yangilaydi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -165,24 +199,36 @@ export class StudentsController {
     }
 
     @Patch(':id/archive')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "Studentni arxivga o'tkazish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni arxivga o'tkazish",
+        description: "O'quvchini arxiv (INACTIVE) holatiga o'tkazadi va uning guruhlardagi statusini ham INACTIVE qiladi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     archive(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.archive(id);
     }
 
     @Patch(':id/restore')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: 'Studentni arxivdan qayta faollashtirish' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni arxivdan qayta faollashtirish",
+        description: "Arxivlangan o'quvchini faol (ACTIVE) holatga qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     restore(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.restore(id);
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: "Studentni butunlay o'chirish (DELETED)" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni butunlay o'chirish (DELETED)",
+        description: "O'quvchini tizimdan butunlay o'chirmaydi, balki statusini DELETED holatiga o'tkazib qo'yadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.remove(id);

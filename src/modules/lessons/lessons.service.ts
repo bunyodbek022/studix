@@ -22,6 +22,7 @@ export class LessonsService {
         await this.prisma.lesson.create({
             data: {
                 ...payload,
+                branchId: existGroup.branchId,
                 teacherId: currentUser.role == Role.TEACHER ? currentUser.id : null,
                 userId: currentUser.role != Role.TEACHER ? currentUser.id : null
             }
@@ -39,7 +40,7 @@ export class LessonsService {
     ) {
         const lesson = await this.prisma.lesson.findUnique({
             where: { id: lessonId },
-            select: { id: true, groupId: true },
+            select: { id: true, groupId: true, branchId: true },
         });
 
         if (!lesson) {
@@ -50,7 +51,6 @@ export class LessonsService {
         const studentGroups = await this.prisma.studentGroup.findMany({
             where: {
                 groupId: lesson.groupId,
-                status: 'ACTIVE',
             },
             select: { studentId: true },
         });
@@ -85,6 +85,7 @@ export class LessonsService {
                         studentId: item.studentId,
                         isPresent: item.isPresent,
                         userId: currentUser.id,
+                        branchId: lesson.branchId,
                     },
                 }),
             ),

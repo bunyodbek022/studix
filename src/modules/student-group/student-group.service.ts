@@ -24,6 +24,10 @@ export class StudentGroupService {
             throw new NotFoundException(`Student topilmadi: ${dto.studentId}`);
         }
 
+        if (student.branchId !== group.branchId) {
+            throw new BadRequestException("Talaba va guruh filiallari mos emas");
+        }
+
         const existing = await this.prisma.studentGroup.findUnique({
             where: {
                 groupId_studentId: {
@@ -60,6 +64,7 @@ export class StudentGroupService {
                 groupId: dto.groupId,
                 studentId: dto.studentId,
                 userId: currentUser.id,
+                branchId: group.branchId,
             },
             include: {
                 student: {

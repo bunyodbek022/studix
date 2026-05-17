@@ -26,7 +26,8 @@ export class LessonVideosService {
             title: dto.title,
             file: filename,
             teacherId: currentUser.role == Role.TEACHER ? currentUser.id : null,
-            userId: currentUser.role != Role.TEACHER ? currentUser.id : null
+            userId: currentUser.role != Role.TEACHER ? currentUser.id : null,
+            branchId: existLesson.branchId,
         }
     });
 

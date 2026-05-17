@@ -36,8 +36,12 @@ export class LessonVideosController {
     constructor(private readonly lessonVideosService: LessonVideosService) { }
 
     @Post()
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-    @ApiOperation({ summary: 'Dars uchun yangi video yuklash' })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+    @ApiOperation({
+        summary: "Dars uchun yangi video yuklash",
+        description: "Muayyan darsga yangi video dars faylini yuklaydi (multipart/form-data).\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
+    })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file', multerVideoConfig))
     @ApiBody({
@@ -54,7 +58,7 @@ export class LessonVideosController {
     create(
         @Body() dto: CreateLessonVideoDto,
         @UploadedFile() file: Express.Multer.File,
-        @Req() req: Request,
+        @Req() req: any,
     ) {
         console.log(file);
         console.log(file?.filename);
@@ -63,8 +67,12 @@ export class LessonVideosController {
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-    @ApiOperation({ summary: "Lesson videoni o'chirish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+    @ApiOperation({
+        summary: "Dars videosini o'chirish",
+        description: "Darsga yuklangan videoni tizimdan butunlay o'chirib yuboradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.lessonVideosService.remove(id);

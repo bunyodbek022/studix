@@ -53,6 +53,4 @@ export class AuthController {
 const USER_ROLES = [
     Role.SUPERADMIN,
     Role.ADMIN,
-    Role.MANAGEMENT,
-    Role.ADMINISTRATOR,
 ] as string[];

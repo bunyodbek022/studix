@@ -4,8 +4,10 @@ import {
   IsOptional,
   IsDateString,
   MinLength,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateStudentDto {
   @ApiProperty({ example: 'Dilnoza Yusupova' })
@@ -28,4 +30,10 @@ export class CreateStudentDto {
   @ApiProperty({ example: '2000-05-20' })
   @IsDateString()
   birth_date: string;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  branchId?: number;
 }

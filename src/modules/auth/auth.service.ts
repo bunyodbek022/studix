@@ -18,7 +18,7 @@ export class AuthService {
     ) { }
 
     async loginStudent(data: loginUserDto) {
-        const studentExist = await this.prisma.student.findUnique({
+        const studentExist = await this.prisma.student.findFirst({
             where: { email: data.email },
         });
         if (!studentExist) {
@@ -35,6 +35,7 @@ export class AuthService {
             id: studentExist.id,
             role: Role.STUDENT,
             email: studentExist.email,
+            branchId: studentExist.branchId,
         });
 
         return {
@@ -46,7 +47,7 @@ export class AuthService {
     }
 
     async loginUser(data: loginUserDto) {
-        const userExist = await this.prisma.user.findUnique({
+        const userExist = await this.prisma.user.findFirst({
             where: { email: data.email },
         });
 
@@ -60,6 +61,7 @@ export class AuthService {
             id: userExist.id,
             email: userExist.email,
             role: userExist.role,
+            branchId: userExist.branchId,
         });
 
 
@@ -74,7 +76,7 @@ export class AuthService {
 
     async loginTeacher(data: loginUserDto) {
 
-        const teacherExist = await this.prisma.teacher.findUnique({
+        const teacherExist = await this.prisma.teacher.findFirst({
             where: { email: data.email },
         });
         if (!teacherExist) {
@@ -90,6 +92,7 @@ export class AuthService {
             id: teacherExist.id,
             role: Role.TEACHER,
             email: teacherExist.email,
+            branchId: teacherExist.branchId,
         });
 
         return {

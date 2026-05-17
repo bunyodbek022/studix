@@ -48,4 +48,9 @@ export class CreateTeacherDto {
     @IsDateString()
     birth_date?: string;
 
+    @ApiPropertyOptional({ example: 1 })
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    branchId?: number;
 }

@@ -37,9 +37,14 @@ export class TeachersService {
         private jwt: JwtService,
     ) { }
 
-    async create(dto: CreateTeacherDto, currentUser: { role: Role }, file?: Express.Multer.File) {
-        const existing = await this.prisma.teacher.findUnique({
-            where: { email: dto.email },
+    async create(dto: CreateTeacherDto, currentUser: { id: number, role: Role, branchId?: number }, file?: Express.Multer.File) {
+        const branchId = dto.branchId ?? currentUser?.branchId;
+        if (!branchId) {
+            throw new BadRequestException('Branch ID is required');
+        }
+
+        const existing = await this.prisma.teacher.findFirst({
+            where: { email: dto.email, branchId },
         });
 
         if (existing) {
@@ -52,6 +57,7 @@ export class TeachersService {
         const teacher = await this.prisma.teacher.create({
             data: {
                 ...dto,
+                branchId,
                 addedBy: currentUser.role,
                 password: hashedPassword,
                 photo: file ? file.filename : null,
@@ -194,9 +200,10 @@ export class TeachersService {
                 id: true,
                 status: true,
                 fullName: true,
+                branchId: true,
                 groups: {
                     where: { status: 'ACTIVE' },
-                    select: { id: true, name: true },
+                    select: { name: true },
                 },
             },
         });
@@ -205,20 +212,20 @@ export class TeachersService {
             throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
         }
 
+        const activeGroups = teacher.groups.map((g) => g.name);
+        if (activeGroups.length > 0) {
+            const groupNames = activeGroups.join(', ');
+            throw new BadRequestException(
+                `O'qituvchini arxivga o'tkazish uchun avval quyidagi guruhlardan olib tashlang: ${groupNames}`
+            );
+        }
+
         if (teacher.status === 'INACTIVE') {
             throw new BadRequestException(`Bu o'qituvchi allaqachon arxivda`);
         }
 
         if (teacher.status === 'DELETED') {
             throw new BadRequestException(`Bu o'qituvchi o'chirilgan`);
-        }
-
-        // Aktiv guruhlari bor bo'lsa — xato
-        if (teacher.groups.length > 0) {
-            const groupNames = teacher.groups.map((g) => g.name).join(', ');
-            throw new BadRequestException(
-                `O'qituvchini arxivga o'tkazish uchun avval quyidagi guruhlardan olib tashlang: ${groupNames}`
-            );
         }
 
         // Arxivga o'tkazish
@@ -234,6 +241,7 @@ export class TeachersService {
                 userId: currentUser.id,
                 type: TeacherHistoryType.ARCHIVED,
                 description: `O'qituvchi (${teacher.fullName}) arxivga o'tkazildi`,
+                branchId: teacher.branchId,
             },
         });
 
@@ -246,7 +254,7 @@ export class TeachersService {
     async remove(id: number, currentUser: { id: number, role: Role }) {
         const teacher = await this.prisma.teacher.findUnique({
             where: { id },
-            select: { id: true, status: true, fullName: true },
+            select: { id: true, status: true, fullName: true, branchId: true },
         });
 
         if (!teacher) {
@@ -270,6 +278,7 @@ export class TeachersService {
                 userId: currentUser.id,
                 type: TeacherHistoryType.DELETED,
                 description: `O'qituvchi (${teacher.fullName}) tizimdan o'chirildi`,
+                branchId: teacher.branchId,
             },
         });
 
@@ -282,7 +291,7 @@ export class TeachersService {
     async restore(id: number, currentUser: { id: number, role: Role }) {
         const teacher = await this.prisma.teacher.findUnique({
             where: { id },
-            select: { id: true, status: true, fullName: true },
+            select: { id: true, status: true, fullName: true, branchId: true },
         });
 
         if (!teacher) {
@@ -304,6 +313,7 @@ export class TeachersService {
                 userId: currentUser.id,
                 type: 'RESTORED',
                 description: `O'qituvchi (${teacher.fullName}) arxivdan qayta faollashtirildi`,
+                branchId: teacher.branchId,
             },
         });
 

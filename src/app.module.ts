@@ -14,6 +14,9 @@ import { UserSeeder } from './common/seeds/user.seeder';
 import { StudentGroupModule } from './modules/student-group/student-group.module';
 import { LessonVideosModule } from './modules/lesson-videos/lesson-videos.module';
 import { LabelsModule } from './modules/labels/labels.module';
+import { CentersModule } from './modules/centers/centers.module';
+import { BranchesModule } from './modules/branches/branches.module';
+import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
 
 @Module({
     imports: [
@@ -57,6 +60,9 @@ import { LabelsModule } from './modules/labels/labels.module';
         RoomsModule,
         StudentGroupModule,
         LabelsModule,
+        CentersModule,
+        BranchesModule,
+        RolePermissionsModule,
     ],
     controllers: [],
     providers: [UserSeeder],

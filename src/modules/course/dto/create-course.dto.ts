@@ -42,4 +42,10 @@ export class CreateCourseDto {
     @IsOptional()
     @IsString()
     description?: string;
+
+    @ApiPropertyOptional({ example: 1 })
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    branchId?: number;
 }

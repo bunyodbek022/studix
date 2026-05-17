@@ -5,9 +5,11 @@ import {
   IsOptional,
   IsDateString,
   MinLength,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role, UserStatus } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John Doe' })
@@ -44,5 +46,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  branchId?: number;
 
 }

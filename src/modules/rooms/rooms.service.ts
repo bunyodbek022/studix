@@ -13,9 +13,14 @@ import { FindAllRoomsDto } from './dto/find-all-rooms.dto';
 export class RoomsService {
     constructor(private prisma: PrismaService) {}
 
-    async create(dto: CreateRoomDto) {
-        const existing = await this.prisma.room.findUnique({
-            where: { name: dto.name },
+    async create(dto: CreateRoomDto, currentUser?: { branchId?: number }) {
+        const branchId = dto.branchId ?? currentUser?.branchId;
+        if (!branchId) {
+            throw new BadRequestException('Branch ID is required');
+        }
+
+        const existing = await this.prisma.room.findFirst({
+            where: { name: dto.name, branchId },
         });
 
         if (existing) {
@@ -23,7 +28,11 @@ export class RoomsService {
         }
 
         const room = await this.prisma.room.create({
-            data: dto,
+            data: {
+                name: dto.name,
+                capacity: dto.capacity,
+                branchId,
+            },
         });
 
         return {
@@ -97,9 +106,10 @@ export class RoomsService {
         }
 
         if (dto.name && dto.name !== room.name) {
-            const existing = await this.prisma.room.findUnique({
-                where: { name: dto.name },
+            const existing = await this.prisma.room.findFirst({
+                where: { name: dto.name, branchId: room.branchId },
             });
+
             if (existing) {
                 throw new ConflictException('Bu nomdagi xona allaqachon mavjud');
             }

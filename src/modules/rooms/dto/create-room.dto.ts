@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateRoomDto {
     @ApiProperty({ example: 'Room A' })
@@ -13,4 +13,10 @@ export class CreateRoomDto {
     @IsInt()
     @Min(1)
     capacity: number;
+
+    @ApiPropertyOptional({ example: 1 })
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    branchId?: number;
 }

@@ -26,9 +26,11 @@ export class UsersService {
     private mail: MailService,
   ) {}
 
-  async create(dto: CreateUserDto) {
-    const exists = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+  async create(dto: CreateUserDto, currentUser?: { branchId?: number }) {
+    const branchId = dto.branchId ?? currentUser?.branchId;
+
+    const exists = await this.prisma.user.findFirst({
+      where: { email: dto.email, branchId },
     });
     if (exists) {
       throw new BadRequestException('Bu email allaqachon ro\'yxatdan o\'tgan');
@@ -45,6 +47,7 @@ export class UsersService {
         role: dto.role,
         address: dto.address,
         password: hashedPassword,
+        branchId,
       },
       select: SELECT_USER,
     });
@@ -52,7 +55,7 @@ export class UsersService {
      try {
         await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
     } catch (error) {
-        await this.prisma.user.delete({ where: { email: dto.email } });
+        await this.prisma.user.deleteMany({ where: { email: dto.email } });
         console.log(error);
         
         throw new InternalServerErrorException('Email yuborishda xatolik. User yaratilmadi.');

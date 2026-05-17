@@ -42,8 +42,12 @@ export class TeachersController {
     constructor(private readonly teachersService: TeachersService) { }
 
     @Post()
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: "Yangi o'qituvchi qo'shish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Yangi o'qituvchi qo'shish",
+        description: "Yangi o'qituvchi ma'lumotlarini tizimga kiritadi. Rasm yuklash (photo) va tajriba (experience) yillari kiritilishi shart.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -62,15 +66,19 @@ export class TeachersController {
     @UseInterceptors(FileInterceptor('photo', multerConfig))
     create(
         @Body() dto: CreateTeacherDto,
-        @Req() req: Request,
+        @Req() req: any,
         @UploadedFile() file?: Express.Multer.File,
     ) {
         return this.teachersService.create(dto, req['user'], file);
     }
 
     @Get()
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "Barcha o'qituvchilarni ko'rish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Barcha o'qituvchilarni ko'rish",
+        description: "Tizimdagi barcha o'qituvchilar ro'yxatini qidiruv (search) va pagination bo'yicha sahifalab qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'Jasur' })
@@ -79,24 +87,34 @@ export class TeachersController {
     }
 
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
-        summary: "O'qituvchini ID bo'yicha ko'rish (rating va guruhlar bilan)",
+        summary: "O'qituvchini ID bo'yicha ko'rish",
+        description: "Muayyan o'qituvchining shaxsiy ma'lumotlarini, rating ballarini va u o'tadigan faol guruhlarni uning ID raqami orqali qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.teachersService.findOne(id);
     }
 
     @Get(':id/groups')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "O'qituvchining guruhlari" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'qituvchining guruhlari",
+        description: "O'qituvchi dars beradigan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     getGroups(@Param('id', ParseIntPipe) id: number) {
         return this.teachersService.getGroups(id);
     }
 
     @Patch(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN, Role.MANAGEMENT, Role.ADMINISTRATOR)
-    @ApiOperation({ summary: "O'qituvchi ma'lumotlarini yangilash" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'qituvchi ma'lumotlarini yangilash",
+        description: "Mavjud o'qituvchining shaxsiy ma'lumotlarini (ismi, emaili, mutaxassisligi, tajribasi, telefoni, tug'ilgan kuni, rasmi) yangilaydi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -123,29 +141,38 @@ export class TeachersController {
     }
 
     @Patch(':id/archive')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @ApiOperation({
         summary: "O'qituvchini arxivga o'tkazish",
-        description: "Faqat aktiv guruhlari bo'lmagan teacher arxivga o'tkaziladi",
+        description: "O'qituvchini arxiv (INACTIVE) holatiga o'tkazadi. Buning uchun uning hech qanday faol dars berayotgan guruhi bo'lmasligi shart.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    archive(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    archive(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
         return this.teachersService.archive(id, req['user']);
     }
 
     @Patch(':id/restore')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: "O'qituvchini arxivdan qayta faollashtirish" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'qituvchini arxivdan qayta faollashtirish",
+        description: "Arxivlangan o'qituvchini faol (ACTIVE) holatga qaytaradi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    restore(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    restore(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
         return this.teachersService.restore(id, req['user']);
     }
 
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.SUPERADMIN)
-    @ApiOperation({ summary: "O'qituvchini o'chirish (DELETED)" })
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'qituvchini tizimdan o'chirish (DELETED)",
+        description: "O'qituvchini tizimdan butunlay o'chirmaydi, balki statusini DELETED holatiga o'tkazib qo'yadi.\n\n" +
+                     "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
+    })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
         return this.teachersService.remove(id, req['user']);
     }
 }

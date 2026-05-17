@@ -1,358 +1,501 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
 }
 
 enum Status {
-    ACTIVE
-    INACTIVE
-    FREEZE
-    DELETED
+  ACTIVE
+  INACTIVE
+  FREEZE
+  DELETED
 }
 
 enum UserStatus {
-    ACTIVE
-    INACTIVE
-    FREEZE
-    DELETED
+  ACTIVE
+  INACTIVE
+  FREEZE
+  DELETED
 }
 
 enum CourseLevel {
-    BEGINNER
-    INTERMEDIATE
-    ADVANCED
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
 }
 
 enum WeekDays {
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
-    SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
 enum HomeworkStatus {
-    APPROVED
-    REJECTED
-    PENDING
+  APPROVED
+  REJECTED
+  PENDING
 }
 
 enum HomeworkStatusStudent {
-    COMPLETED
-    MISSED
-    DELAY
+  COMPLETED
+  MISSED
+  DELAY
 }
 
 enum Role {
-    SUPERADMIN
-    ADMIN
-    STUDENT
-    TEACHER
-    MANAGEMENT
-    ADMINISTRATOR
+  SUPERADMIN
+  CREATOR
+  ADMIN
+  STUDENT
+  TEACHER
+}
+
+enum Label {
+  ALL
+  DASHBOARD
+  TEACHERS
+  STUDENTS
+  GROUPS
+  LEADS
+  FINANCE
+  GIFTS
+  MANAGEMENT
+  TESTS
+  CLASS
+  REASON
+}
+
+enum RoleActions {
+  CREATE
+  READ
+  UPDATE
+  DELETE
 }
 
 enum TeacherHistoryType {
-    ARCHIVED
-    DELETED
-    CREATED
-    UPDATED
-    RESTORED
+  ARCHIVED
+  DELETED
+  CREATED
+  UPDATED
+  RESTORED
 }
 
 enum StudentHistoryType {
-    CREATED
-    UPDATED
-    ARCHIVED
-    RESTORED
-    DELETED
+  CREATED
+  UPDATED
+  ARCHIVED
+  RESTORED
+  DELETED
 }
 
 enum GroupHistoryType {
-    CREATED
-    UPDATED
-    ARCHIVED
-    RESTORED
-    DELETED
+  CREATED
+  UPDATED
+  ARCHIVED
+  RESTORED
+  DELETED
+}
+
+model Center {
+  id         Int      @id @default(autoincrement())
+  name       String
+  status     Status   @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  creatorId Int  @unique
+  creator   User @relation("CenterCreator", fields: [creatorId], references: [id])
+
+  branches        Branch[]
+  rolePermissions RolePermission[]
+}
+
+model Branch {
+  id         Int      @id @default(autoincrement())
+  centerId   Int
+  name       String
+  address    String?
+  status     Status   @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  center Center @relation(fields: [centerId], references: [id])
+
+  users             User[]
+  teachers          Teacher[]
+  students          Student[]
+  courses           Course[]
+  rooms             Room[]
+  groups            Group[]
+  studentGroups     StudentGroup[]
+  lessons           Lesson[]
+  attendances       Attendance[]
+  homeworks         Homework[]
+  lessonVideos      LessonVideo[]
+  homeworkResponses HomeworkResponse[]
+  homeworkResults   HomeworkResult[]
+  ratings           Rating[]
+  teacherHistories  TeacherHistory[]
+  studentHistories  StudentHistory[]
+  groupHistories    GroupHistory[]
+  rolePermissions   RolePermission[]
 }
 
 model User {
-    id         Int        @id @default(autoincrement())
-    fullName   String
-    email      String     @unique
-    photo      String?
-    password   String
-    position   String
-    role       Role
-    hire_date  DateTime
-    address    String?
-    status     UserStatus @default(ACTIVE)
-    created_at DateTime   @default(now())
-    updated_at DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  branchId   Int?
+  fullName   String
+  email      String
+  phone      String?
+  photo      String?
+  password   String
+  position   String
+  role       Role
+  customRole String?
+  hire_date  DateTime
+  address    String?
+  status     UserStatus @default(ACTIVE)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
-    groups           Group[]
-    userLesson       Lesson[]
-    userAttendence   Attendance[]
-    userHomework     Homework[]
-    lessonVideo      LessonVideo[]
-    HomeworkResult   HomeworkResult[]
-    teacherHistories TeacherHistory[]
-    studentHistories StudentHistory[]
-    groupHistories   GroupHistory[]
+  branch           Branch?          @relation(fields: [branchId], references: [id])
+  createdCenter    Center?          @relation("CenterCreator")
+  groups           Group[]
+  userLesson       Lesson[]
+  userAttendence   Attendance[]
+  userHomework     Homework[]
+  lessonVideo      LessonVideo[]
+  HomeworkResult   HomeworkResult[]
+  teacherHistories TeacherHistory[]
+  studentHistories StudentHistory[]
+  groupHistories   GroupHistory[]
+
+  @@unique([email, branchId])
+  @@unique([phone, branchId])
 }
 
 model Teacher {
-    id                Int              @id @default(autoincrement())
-    fullName          String
-    email             String           @unique
-    phone             String?
-    birth_date        DateTime?
-    photo             String?
-    password          String
-    position          String
-    experience        Int
-    addedBy           String?
-    status            UserStatus       @default(ACTIVE)
-    created_at        DateTime         @default(now())
-    updated_at        DateTime         @updatedAt
-    groups            Group[]
-    teacherLessons    Lesson[]
-    teacherAttendence Attendance[]
-    homework          Homework[]
-    lessonVideo       LessonVideo[]
-    rating            Rating[]
-    HomeworkResult    HomeworkResult[]
+  id         Int        @id @default(autoincrement())
+  branchId   Int
+  fullName   String
+  email      String
+  phone      String?
+  birth_date DateTime?
+  photo      String?
+  password   String
+  position   String
+  experience Int
+  addedBy    String?
+  status     UserStatus @default(ACTIVE)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
-    teacherHistories TeacherHistory[]
+  branch            Branch           @relation(fields: [branchId], references: [id])
+  groups            Group[]
+  teacherLessons    Lesson[]
+  teacherAttendence Attendance[]
+  homework          Homework[]
+  lessonVideo       LessonVideo[]
+  rating            Rating[]
+  HomeworkResult    HomeworkResult[]
+  teacherHistories  TeacherHistory[]
+
+  @@unique([email, branchId])
+  @@unique([phone, branchId])
 }
 
 model TeacherHistory {
-    id          Int                @id @default(autoincrement())
-    teacherId   Int
-    userId      Int
-    type        TeacherHistoryType
-    description String?
-    created_at  DateTime           @default(now())
+  id          Int                @id @default(autoincrement())
+  branchId    Int
+  teacherId   Int
+  userId      Int
+  type        TeacherHistoryType
+  description String?
+  created_at  DateTime           @default(now())
 
-    teacher Teacher @relation(fields: [teacherId], references: [id])
-    user    User    @relation(fields: [userId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 }
 
 model Student {
-    id         Int        @id @default(autoincrement())
-    fullName   String
-    email      String     @unique
-    photo      String?
-    password   String
-    birth_date DateTime
-    status     UserStatus @default(ACTIVE)
-    created_at DateTime   @default(now())
-    updated_at DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  branchId   Int
+  fullName   String
+  email      String
+  phone      String?
+  photo      String?
+  password   String
+  birth_date DateTime
+  status     UserStatus @default(ACTIVE)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
-    StudentGroups     StudentGroup[]
-    StudentAttendence Attendance[]
-    HomeworkResult    HomeworkResult[]
-    HomeworkResponse  HomeworkResponse[]
-    studentHistories  StudentHistory[]
+  branch            Branch             @relation(fields: [branchId], references: [id])
+  StudentGroups     StudentGroup[]
+  StudentAttendence Attendance[]
+  HomeworkResult    HomeworkResult[]
+  HomeworkResponse  HomeworkResponse[]
+  studentHistories  StudentHistory[]
+
+  @@unique([email, branchId])
+  @@unique([phone, branchId])
 }
 
 model StudentHistory {
-    id          Int                @id @default(autoincrement())
-    studentId   Int
-    userId      Int?
-    type        StudentHistoryType
-    description String?
-    created_at  DateTime           @default(now())
+  id          Int                @id @default(autoincrement())
+  branchId    Int
+  studentId   Int
+  userId      Int?
+  type        StudentHistoryType
+  description String?
+  created_at  DateTime           @default(now())
 
-    student Student @relation(fields: [studentId], references: [id])
-    user    User?   @relation(fields: [userId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
 }
 
 model Course {
-    id             Int          @id @default(autoincrement())
-    name           String       @unique
-    durationMonth  Int
-    durationLesson Int
-    status         Status       @default(ACTIVE)
-    level          CourseLevel?
-    price          Decimal
-    description    String?
-    created_at     DateTime     @default(now())
-    updated_at     DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  branchId       Int
+  name           String
+  durationMonth  Int
+  durationLesson Int
+  status         Status       @default(ACTIVE)
+  level          CourseLevel?
+  price          Decimal
+  description    String?
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
 
-    groups Group[]
+  branch Branch  @relation(fields: [branchId], references: [id])
+  groups Group[]
+
+  @@unique([name, branchId])
 }
 
 model Room {
-    id         Int      @id @default(autoincrement())
-    name       String   @unique
-    capacity   Int
-    status     Status   @default(ACTIVE)
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-    groups     Group[]
+  id         Int      @id @default(autoincrement())
+  branchId   Int
+  name       String
+  capacity   Int
+  status     Status   @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  branch Branch  @relation(fields: [branchId], references: [id])
+  groups Group[]
+
+  @@unique([name, branchId])
 }
 
 model Group {
-    id         Int        @id @default(autoincrement())
-    teacherId  Int
-    userId     Int
-    roomId     Int
-    courseId   Int
-    name       String     @unique
-    startDate  DateTime
-    startTime  String
-    weekDays   WeekDays[]
-    status     Status     @default(ACTIVE)
-    created_at DateTime   @default(now())
-    updated_at DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  branchId   Int
+  teacherId  Int
+  userId     Int
+  roomId     Int
+  courseId   Int
+  name       String
+  startDate  DateTime
+  startTime  String
+  weekDays   WeekDays[]
+  status     Status     @default(ACTIVE)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
-    studentGroup   StudentGroup[]
-    lesson         Lesson[]
-    teacher        Teacher        @relation(fields: [teacherId], references: [id])
-    user           User           @relation(fields: [userId], references: [id])
-    room           Room           @relation(fields: [roomId], references: [id])
-    course         Course         @relation(fields: [courseId], references: [id])
-    groupHistories GroupHistory[]
+  branch         Branch         @relation(fields: [branchId], references: [id])
+  studentGroup   StudentGroup[]
+  lesson         Lesson[]
+  teacher        Teacher        @relation(fields: [teacherId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+  room           Room           @relation(fields: [roomId], references: [id])
+  course         Course         @relation(fields: [courseId], references: [id])
+  groupHistories GroupHistory[]
 
-    @@unique([courseId, name])
+  @@unique([courseId, name, branchId])
 }
 
 model GroupHistory {
-    id          Int              @id @default(autoincrement())
-    groupId     Int
-    userId      Int?
-    type        GroupHistoryType
-    description String?
-    created_at  DateTime         @default(now())
+  id          Int              @id @default(autoincrement())
+  branchId    Int
+  groupId     Int
+  userId      Int?
+  type        GroupHistoryType
+  description String?
+  created_at  DateTime         @default(now())
 
-    group Group @relation(fields: [groupId], references: [id])
-    user  User? @relation(fields: [userId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
+  group  Group  @relation(fields: [groupId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
 }
 
 model StudentGroup {
-    id         Int      @id @default(autoincrement())
-    groupId    Int
-    studentId  Int
-    userId     Int
-    status     Status   @default(ACTIVE)
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  branchId   Int
+  groupId    Int
+  studentId  Int
+  userId     Int
+  status     Status   @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-    group   Group   @relation(fields: [groupId], references: [id])
-    student Student @relation(fields: [studentId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
-    @@unique([groupId, studentId])
+  @@unique([groupId, studentId])
 }
 
 model Lesson {
-    id         Int          @id @default(autoincrement())
-    groupId    Int
-    title      String
-    userId     Int?
-    teacherId  Int?
-    created_at DateTime     @default(now())
-    updated_at DateTime     @updatedAt
-    lesson     Attendance[]
+  id         Int          @id @default(autoincrement())
+  branchId   Int
+  groupId    Int
+  title      String
+  userId     Int?
+  teacherId  Int?
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  lesson     Attendance[]
 
-    group          Group         @relation(fields: [groupId], references: [id])
-    teacher        Teacher?      @relation(fields: [teacherId], references: [id])
-    user           User?         @relation(fields: [userId], references: [id])
-    lessonHomework Homework[]
-    lessonVideo    LessonVideo[]
-    rating         Rating[]
+  branch         Branch        @relation(fields: [branchId], references: [id])
+  group          Group         @relation(fields: [groupId], references: [id])
+  teacher        Teacher?      @relation(fields: [teacherId], references: [id])
+  user           User?         @relation(fields: [userId], references: [id])
+  lessonHomework Homework[]
+  lessonVideo    LessonVideo[]
+  rating         Rating[]
 }
 
 model Attendance {
-    id         Int      @id @default(autoincrement())
-    lessonId   Int
-    userId     Int?
-    teacherId  Int?
-    studentId  Int
-    isPresent  Boolean
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-    teacher    Teacher? @relation(fields: [teacherId], references: [id])
-    user       User?    @relation(fields: [userId], references: [id])
-    student    Student  @relation(fields: [studentId], references: [id])
-    lesson     Lesson   @relation(fields: [lessonId], references: [id])
+  id         Int      @id @default(autoincrement())
+  branchId   Int
+  lessonId   Int
+  userId     Int?
+  teacherId  Int?
+  studentId  Int
+  isPresent  Boolean
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-     @@unique([lessonId, studentId])
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+  student Student  @relation(fields: [studentId], references: [id])
+  lesson  Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([lessonId, studentId])
 }
 
 model Homework {
-    id           Int      @id @default(autoincrement())
-    lessonId     Int
-    userId       Int?
-    teacherId    Int?
-    title        String
-    file         String?
-    created_at   DateTime @default(now())
-    updated_at   DateTime @updatedAt
-    durationTime Int      @default(16)
-    teacher      Teacher? @relation(fields: [teacherId], references: [id])
-    user         User?    @relation(fields: [userId], references: [id])
-    lesson       Lesson   @relation(fields: [lessonId], references: [id])
+  id           Int      @id @default(autoincrement())
+  branchId     Int
+  lessonId     Int
+  userId       Int?
+  teacherId    Int?
+  title        String
+  file         String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  durationTime Int      @default(16)
 
-    homeworkResult   HomeworkResult[]
-    homeworkResponse HomeworkResponse[]
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+  lesson  Lesson   @relation(fields: [lessonId], references: [id])
+
+  homeworkResult   HomeworkResult[]
+  homeworkResponse HomeworkResponse[]
 }
 
 model LessonVideo {
-    id         Int      @id @default(autoincrement())
-    lessonId   Int
-    userId     Int?
-    teacherId  Int?
-    title      String
-    file       String
-    created_at DateTime @default(now())
-    teacher    Teacher? @relation(fields: [teacherId], references: [id])
-    user       User?    @relation(fields: [userId], references: [id])
-    lesson     Lesson   @relation(fields: [lessonId], references: [id])
+  id         Int      @id @default(autoincrement())
+  branchId   Int
+  lessonId   Int
+  userId     Int?
+  teacherId  Int?
+  title      String
+  file       String
+  created_at DateTime @default(now())
+
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+  lesson  Lesson   @relation(fields: [lessonId], references: [id])
 }
 
 model HomeworkResponse {
-    id         Int                   @id @default(autoincrement())
-    homeworkId Int
-    studentId  Int
-    title      String
-    file       String?
-    status     HomeworkStatusStudent
-    created_at DateTime              @default(now())
-    updated_at DateTime              @updatedAt
-    student    Student               @relation(fields: [studentId], references: [id])
-    homework   Homework              @relation(fields: [homeworkId], references: [id])
+  id         Int                   @id @default(autoincrement())
+  branchId   Int
+  homeworkId Int
+  studentId  Int
+  title      String
+  file       String?
+  status     HomeworkStatusStudent
+  created_at DateTime              @default(now())
+  updated_at DateTime              @updatedAt
+
+  branch   Branch   @relation(fields: [branchId], references: [id])
+  student  Student  @relation(fields: [studentId], references: [id])
+  homework Homework @relation(fields: [homeworkId], references: [id])
 }
 
 model HomeworkResult {
-    id         Int            @id @default(autoincrement())
-    homeworkId Int
-    studentId  Int
-    userId     Int?
-    teacherId  Int?
-    title      String
-    file       String?
-    score      Int
-    status     HomeworkStatus
-    created_at DateTime       @default(now())
-    updated_at DateTime       @updatedAt
-    teacher    Teacher?       @relation(fields: [teacherId], references: [id])
-    user       User?          @relation(fields: [userId], references: [id])
-    student    Student        @relation(fields: [studentId], references: [id])
-    homework   Homework       @relation(fields: [homeworkId], references: [id])
+  id         Int            @id @default(autoincrement())
+  branchId   Int
+  homeworkId Int
+  studentId  Int
+  userId     Int?
+  teacherId  Int?
+  title      String
+  file       String?
+  score      Int
+  status     HomeworkStatus
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  branch   Branch   @relation(fields: [branchId], references: [id])
+  teacher  Teacher? @relation(fields: [teacherId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+  student  Student  @relation(fields: [studentId], references: [id])
+  homework Homework @relation(fields: [homeworkId], references: [id])
 }
 
 model Rating {
-    id         Int      @id @default(autoincrement())
-    teacherId  Int
-    lessonId   Int
-    score      Int
-    created_at DateTime @default(now())
-    teacher    Teacher  @relation(fields: [teacherId], references: [id])
-    lesson     Lesson   @relation(fields: [lessonId], references: [id])
+  id         Int      @id @default(autoincrement())
+  branchId   Int
+  teacherId  Int
+  lessonId   Int
+  score      Int
+  created_at DateTime @default(now())
+
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  lesson  Lesson  @relation(fields: [lessonId], references: [id])
+}
+
+model RolePermission {
+  id        Int           @id @default(autoincrement())
+  name      String
+  color     String
+  category  Label
+  actions   RoleActions[]
+  status    Status        @default(ACTIVE)
+  role      String        @default("ADMIN")
+  branchId  Int?
+  centerId  Int?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime?     @updatedAt
+
+  branch Branch? @relation(fields: [branchId], references: [id])
+  center Center? @relation(fields: [centerId], references: [id])
+
+  @@unique([branchId, name, category])
 }
