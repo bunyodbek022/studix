@@ -59,8 +59,8 @@ export class CourseController {
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'Node' })
     @ApiQuery({ name: 'status', required: false, enum: ['ACTIVE', 'INACTIVE'], example: 'ACTIVE' })
-    findAll(@Query() query: FindAllCoursesDto) {
-        return this.courseService.findAll(query);
+    findAll(@Query() query: FindAllCoursesDto, @Req() req: any) {
+        return this.courseService.findAll(query, req['user']);
     }
 
     @Get(':id')

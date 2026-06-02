@@ -62,6 +62,8 @@ export class AuthService {
             email: userExist.email,
             role: userExist.role,
             branchId: userExist.branchId,
+            customRole: userExist.customRole,
+            position: userExist.position,
         });
 
 

@@ -56,10 +56,14 @@ export class TeachersService {
 
         const teacher = await this.prisma.teacher.create({
             data: {
-                ...dto,
+                fullName: dto.fullName,
+                email: dto.email,
+                password: hashedPassword,
+                position: dto.position,
+                experience: dto.experience,
+                phone: dto.phone,
                 branchId,
                 addedBy: currentUser.role,
-                password: hashedPassword,
                 photo: file ? file.filename : null,
                 birth_date: dto.birth_date ? new Date(dto.birth_date) : null,
             },
@@ -72,12 +76,16 @@ export class TeachersService {
         };
     }
 
-    async findAll(query: FindAllTeachersDto) {
+    async findAll(query: FindAllTeachersDto, currentUser?: { branchId?: number; role: Role }) {
         const { page = 1, limit = 10, search, courseId } = query;
         const skip = (page - 1) * limit;
 
         const where: any = {
             status: { not: 'DELETED' as const },
+            // ADMIN faqat o'z filialini ko'radi
+            ...(currentUser?.branchId && {
+                branchId: currentUser.branchId,
+            }),
             ...(search && {
                 OR: [
                     { fullName: { contains: search, mode: 'insensitive' as const } },
@@ -85,7 +93,6 @@ export class TeachersService {
                     { position: { contains: search, mode: 'insensitive' as const } },
                 ],
             }),
-            // courseId bo'yicha — o'sha kursda guruhi bor teacherla
         };
 
         const [teachers, total] = await this.prisma.$transaction([
@@ -311,7 +318,7 @@ export class TeachersService {
             data: {
                 teacherId: id,
                 userId: currentUser.id,
-                type: 'RESTORED',
+                type: TeacherHistoryType.RESTORED,
                 description: `O'qituvchi (${teacher.fullName}) arxivdan qayta faollashtirildi`,
                 branchId: teacher.branchId,
             },

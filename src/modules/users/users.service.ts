@@ -76,8 +76,15 @@ export class UsersService {
     };
   }
 
-  async findAll() {
+  async findAll(currentUser?: { branchId?: number }) {
     return this.prisma.user.findMany({
+      where: {
+        status: { not: 'DELETED' },
+        // ADMIN faqat o'z filialini ko'radi
+        ...(currentUser?.branchId && {
+          branchId: currentUser.branchId,
+        }),
+      },
       select: SELECT_USER,
       orderBy: { created_at: 'desc' },
     });
@@ -118,7 +125,7 @@ export class UsersService {
 
     await this.prisma.user.update({
       where: { id },
-      data: { status: 'INACTIVE' },
+      data: { status: 'DELETED' },
     });
 
     return { message: `Foydalanuvchi (ID: ${id}) o'chirildi` };

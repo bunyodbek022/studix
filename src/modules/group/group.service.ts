@@ -49,9 +49,15 @@ export class GroupsService {
         };
     }
 
-    async getAllGroup() {
+    async getAllGroup(currentUser?: { branchId?: number }) {
         const groups = await this.prisma.group.findMany({
-            where: { status: { not: 'DELETED' as const } },
+            where: {
+                status: { not: 'DELETED' as const },
+                // ADMIN faqat o'z filialini ko'radi
+                ...(currentUser?.branchId && {
+                    branchId: currentUser.branchId,
+                }),
+            },
             include: {
                 course: {
                     select: { id: true, name: true },
@@ -687,7 +693,7 @@ export class GroupsService {
         };
     }
 
-    async archive(id: number) {
+    async archive(id: number, currentUser?: { id?: number }) {
         const group = await this.prisma.group.findUnique({
             where: { id },
             select: { id: true, status: true, name: true, branchId: true },
@@ -709,6 +715,7 @@ export class GroupsService {
         await this.prisma.groupHistory.create({
             data: {
                 groupId: id,
+                userId: currentUser?.id ?? null,
                 type: 'ARCHIVED',
                 description: `Guruh (${group.name}) arxivga o'tkazildi`,
                 branchId: group.branchId,
@@ -721,7 +728,7 @@ export class GroupsService {
         };
     }
 
-    async restore(id: number) {
+    async restore(id: number, currentUser?: { id?: number }) {
         const group = await this.prisma.group.findUnique({
             where: { id },
             select: { id: true, status: true, name: true, branchId: true },
@@ -743,6 +750,7 @@ export class GroupsService {
         await this.prisma.groupHistory.create({
             data: {
                 groupId: id,
+                userId: currentUser?.id ?? null,
                 type: 'RESTORED',
                 description: `Guruh (${group.name}) arxivdan qayta faollashtirildi`,
                 branchId: group.branchId,
@@ -755,7 +763,7 @@ export class GroupsService {
         };
     }
 
-    async remove(id: number) {
+    async remove(id: number, currentUser?: { id?: number }) {
         const group = await this.prisma.group.findUnique({
             where: { id },
             select: { id: true, status: true, name: true, branchId: true },
@@ -787,6 +795,7 @@ export class GroupsService {
         await this.prisma.groupHistory.create({
             data: {
                 groupId: id,
+                userId: currentUser?.id ?? null,
                 type: 'DELETED',
                 description: `Guruh (${group.name}) tizimdan o'chirildi`,
                 branchId: group.branchId,

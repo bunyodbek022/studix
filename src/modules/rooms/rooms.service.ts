@@ -42,12 +42,16 @@ export class RoomsService {
         };
     }
 
-    async findAll(query: FindAllRoomsDto) {
+    async findAll(query: FindAllRoomsDto, currentUser?: { branchId?: number }) {
         const { page = 1, limit = 10, search, status } = query;
         const skip = (page - 1) * limit;
 
         const where = {
             status: status ?? { not: 'DELETED' as const },
+            // ADMIN faqat o'z filialini ko'radi
+            ...(currentUser?.branchId && {
+                branchId: currentUser.branchId,
+            }),
             ...(search && {
                 name: { contains: search, mode: 'insensitive' as const },
             }),

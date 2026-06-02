@@ -58,8 +58,8 @@ export class RoomsController {
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'A' })
     @ApiQuery({ name: 'status', required: false, enum: ['ACTIVE', 'INACTIVE'], example: 'ACTIVE' })
-    findAll(@Query() query: FindAllRoomsDto) {
-        return this.roomsService.findAll(query);
+    findAll(@Query() query: FindAllRoomsDto, @Req() req: any) {
+        return this.roomsService.findAll(query, req['user']);
     }
 
     @Get(':id')

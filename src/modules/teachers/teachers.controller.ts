@@ -82,8 +82,8 @@ export class TeachersController {
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'search', required: false, type: String, example: 'Jasur' })
-    findAll(@Query() query: FindAllTeachersDto) {
-        return this.teachersService.findAll(query);
+    findAll(@Query() query: FindAllTeachersDto, @Req() req: any) {
+        return this.teachersService.findAll(query, req['user']);
     }
 
     @Get(':id')

@@ -92,6 +92,8 @@ enum StudentHistoryType {
   ARCHIVED
   RESTORED
   DELETED
+  FROZEN
+  UNFROZEN
 }
 
 enum GroupHistoryType {
@@ -225,17 +227,20 @@ model TeacherHistory {
 }
 
 model Student {
-  id         Int        @id @default(autoincrement())
-  branchId   Int
-  fullName   String
-  email      String
-  phone      String?
-  photo      String?
-  password   String
-  birth_date DateTime
-  status     UserStatus @default(ACTIVE)
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+  id              Int        @id @default(autoincrement())
+  branchId        Int
+  fullName        String
+  email           String
+  phone           String?
+  photo           String?
+  password        String
+  birth_date      DateTime
+  status          UserStatus @default(ACTIVE)
+  freezeStartDate DateTime?
+  freezeEndDate   DateTime?
+  unfrozenAt      DateTime?
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
 
   branch            Branch             @relation(fields: [branchId], references: [id])
   StudentGroups     StudentGroup[]
@@ -338,14 +343,17 @@ model GroupHistory {
 }
 
 model StudentGroup {
-  id         Int      @id @default(autoincrement())
-  branchId   Int
-  groupId    Int
-  studentId  Int
-  userId     Int
-  status     Status   @default(ACTIVE)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id              Int       @id @default(autoincrement())
+  branchId        Int
+  groupId         Int
+  studentId       Int
+  userId          Int
+  status          Status    @default(ACTIVE)
+  freezeStartDate DateTime?
+  freezeEndDate   DateTime?
+  unfrozenAt      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
 
   branch  Branch  @relation(fields: [branchId], references: [id])
   group   Group   @relation(fields: [groupId], references: [id])

@@ -56,8 +56,8 @@ export class GroupsController {
         description: "Tizimdagi barcha faol guruhlar ro'yxatini qaytaradi.\n\n" +
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
-    getAllGroup() {
-        return this.groupService.getAllGroup();
+    getAllGroup(@Req() req: any) {
+        return this.groupService.getAllGroup(req['user']);
     }
 
     @Get(':id')
@@ -182,8 +182,8 @@ export class GroupsController {
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    archive(@Param('id', ParseIntPipe) id: number) {
-        return this.groupService.archive(id);
+    archive(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+        return this.groupService.archive(id, req['user']);
     }
 
     @Patch(':id/restore')
@@ -194,8 +194,8 @@ export class GroupsController {
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    restore(@Param('id', ParseIntPipe) id: number) {
-        return this.groupService.restore(id);
+    restore(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+        return this.groupService.restore(id, req['user']);
     }
 
     @Delete(':id')
@@ -206,7 +206,7 @@ export class GroupsController {
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`"
     })
     @ApiParam({ name: 'id', type: Number, example: 1 })
-    remove(@Param('id', ParseIntPipe) id: number) {
-        return this.groupService.remove(id);
+    remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+        return this.groupService.remove(id, req['user']);
     }
 }

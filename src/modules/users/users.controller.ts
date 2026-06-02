@@ -30,8 +30,8 @@ export class UsersController {
     }
 
     @Get()
-    findAll() {
-        return this.usersService.findAll();
+    findAll(@Req() req: any) {
+        return this.usersService.findAll(req['user']);
     }
 
     @Get(':id')

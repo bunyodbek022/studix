@@ -27,6 +27,8 @@ import { Request } from 'express';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { FreezeStudentDto } from './dto/freeze-student.dto';
+import { UnfreezeStudentDto } from './dto/unfreeze-student.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
@@ -85,8 +87,8 @@ export class StudentsController {
                      "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n" +
                      "**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`"
     })
-    findAll() {
-        return this.studentsService.findAll();
+    findAll(@Req() req: any) {
+        return this.studentsService.findAll(req['user']);
     }
 
     @Get(':id')
@@ -220,6 +222,43 @@ export class StudentsController {
     @ApiParam({ name: 'id', type: Number, example: 1 })
     restore(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.restore(id);
+    }
+
+    @Patch(':id/freeze')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni freeze qilish (barcha guruhlarida)",
+        description:
+            "Studentni FREEZE holatiga o'tkazadi. Studentning o'z statusi va u a'zo bo'lgan barcha ACTIVE guruhlardagi statusi FREEZE bo'ladi.\n\n" +
+            "**Muhim:** Freeze tugash sanasi (`freezeEndDate`) kelganda tizim avtomatik student va guruhlarni ACTIVE ga qaytaradi.\n\n" +
+            "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`",
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
+    @ApiBody({ type: FreezeStudentDto })
+    freeze(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: FreezeStudentDto,
+    ) {
+        return this.studentsService.freezeStudent(id, dto);
+    }
+
+    @Patch(':id/unfreeze')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni freeze dan chiqarish",
+        description:
+            "FREEZE holatidagi studentni ACTIVE ga qaytaradi. Barcha freeze guruhlaridagi statusi ham ACTIVE bo'ladi.\n\n" +
+            "**Erta chiqarish:** `unfrozenAt` sanasi berilsa, o'sha sana saqlanadi. Berilmasa bugungi sana ishlatiladi. " +
+            "Freeze boshlangandan `unfrozenAt` gacha bo'lgan davrda attendance kiritish imkoni qoladi.\n\n" +
+            "**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`",
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
+    @ApiBody({ type: UnfreezeStudentDto })
+    unfreeze(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UnfreezeStudentDto,
+    ) {
+        return this.studentsService.unfreezeStudent(id, dto);
     }
 
     @Delete(':id')

@@ -8,6 +8,8 @@ import { MailService } from 'src/common/mail/mail.service';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { FreezeStudentDto } from './dto/freeze-student.dto';
+import { UnfreezeStudentDto } from './dto/unfreeze-student.dto';
 import { Status } from '@prisma/client';
 
 const SELECT_STUDENT = {
@@ -71,9 +73,15 @@ export class StudentsService {
         };
     }
 
-    async findAll() {
+    async findAll(currentUser?: { branchId?: number }) {
         const students = await this.prisma.student.findMany({
-            where: { status: { not: 'DELETED' } },
+            where: {
+                status: { not: 'DELETED' },
+                // ADMIN faqat o'z filialini ko'radi
+                ...(currentUser?.branchId && {
+                    branchId: currentUser.branchId,
+                }),
+            },
             select: SELECT_STUDENT,
             orderBy: { created_at: 'desc' },
         });
@@ -471,6 +479,124 @@ export class StudentsService {
         return {
             success: true,
             message: 'Student faollashtirildi',
+        };
+    }
+
+    async freezeStudent(id: number, dto: FreezeStudentDto) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true, branchId: true },
+        });
+
+        if (!student) {
+            throw new NotFoundException(`ID: ${id} bo'yicha student topilmadi`);
+        }
+
+        if (student.status === 'FREEZE') {
+            throw new BadRequestException('Bu student allaqachon freeze holatida');
+        }
+
+        if (student.status === 'DELETED' || student.status === 'INACTIVE') {
+            throw new BadRequestException('Faqat ACTIVE studentni freeze qilish mumkin');
+        }
+
+        const startDate = new Date(dto.freezeStartDate);
+        const endDate = new Date(dto.freezeEndDate);
+
+        if (endDate <= startDate) {
+            throw new BadRequestException('Tugash sanasi boshlanish sanasidan keyin bo\'lishi kerak');
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            // Studentni freeze qilish
+            await tx.student.update({
+                where: { id },
+                data: {
+                    status: 'FREEZE',
+                    freezeStartDate: startDate,
+                    freezeEndDate: endDate,
+                    unfrozenAt: null,
+                },
+            });
+
+            // Barcha ACTIVE StudentGroup larni FREEZE qilish
+            await tx.studentGroup.updateMany({
+                where: { studentId: id, status: Status.ACTIVE },
+                data: {
+                    status: 'FREEZE',
+                    freezeStartDate: startDate,
+                    freezeEndDate: endDate,
+                    unfrozenAt: null,
+                },
+            });
+
+            // Tarixga saqlash
+            await tx.studentHistory.create({
+                data: {
+                    studentId: id,
+                    type: 'FROZEN',
+                    description: `Student (${student.fullName}) freeze qilindi. Davr: ${dto.freezeStartDate} → ${dto.freezeEndDate}`,
+                    branchId: student.branchId,
+                },
+            });
+        });
+
+        return {
+            success: true,
+            message: `Student freeze qilindi. Davr: ${dto.freezeStartDate} → ${dto.freezeEndDate}`,
+        };
+    }
+
+    async unfreezeStudent(id: number, dto: UnfreezeStudentDto) {
+        const student = await this.prisma.student.findUnique({
+            where: { id },
+            select: { id: true, status: true, fullName: true, branchId: true, freezeStartDate: true, freezeEndDate: true },
+        });
+
+        if (!student) {
+            throw new NotFoundException(`ID: ${id} bo'yicha student topilmadi`);
+        }
+
+        if (student.status !== 'FREEZE') {
+            throw new BadRequestException('Bu student freeze holatida emas');
+        }
+
+        const unfrozenAt = dto.unfrozenAt ? new Date(dto.unfrozenAt) : new Date();
+
+        await this.prisma.$transaction(async (tx) => {
+            // Studentni ACTIVE ga qaytarish
+            await tx.student.update({
+                where: { id },
+                data: {
+                    status: 'ACTIVE',
+                    unfrozenAt,
+                },
+            });
+
+            // Barcha FREEZE StudentGroup larni ACTIVE ga qaytarish
+            await tx.studentGroup.updateMany({
+                where: { studentId: id, status: 'FREEZE' },
+                data: {
+                    status: 'ACTIVE',
+                    unfrozenAt,
+                },
+            });
+
+            // Tarixga saqlash
+            await tx.studentHistory.create({
+                data: {
+                    studentId: id,
+                    type: 'UNFROZEN',
+                    description: `Student (${student.fullName}) freeze dan chiqarildi. Erta chiqarilish sanasi: ${unfrozenAt.toISOString().split('T')[0]}`,
+                    branchId: student.branchId,
+                },
+            });
+        });
+
+        return {
+            success: true,
+            message: 'Student freeze dan chiqarildi',
+            unfrozenAt: unfrozenAt.toISOString().split('T')[0],
         };
     }
 

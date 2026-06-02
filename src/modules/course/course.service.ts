@@ -48,12 +48,16 @@ export class CourseService {
         };
     }
 
-    async findAll(query: FindAllCoursesDto) {
+    async findAll(query: FindAllCoursesDto, currentUser?: { branchId?: number }) {
         const { page = 1, limit = 10, search, status } = query;
         const skip = (page - 1) * limit;
 
         const where = {
             ...(status ? { status } : { status: 'ACTIVE' as const }),
+            // ADMIN faqat o'z filialini ko'radi
+            ...(currentUser?.branchId && {
+                branchId: currentUser.branchId,
+            }),
             ...(search && {
                 OR: [
                     { name: { contains: search, mode: 'insensitive' as const } },
