@@ -55,4 +55,32 @@ export const LABEL_DEFINITIONS = [
     order: 7,
     roles: STAFF_ROLES,
   },
+  {
+    key: 'payments',
+    title: 'To\'lovlar',
+    path: '/payments',
+    order: 8,
+    roles: [Role.STUDENT],
+  },
+  {
+    key: 'profile',
+    title: 'Ma\'lumotlarim',
+    path: '/profile',
+    order: 9,
+    roles: [Role.STUDENT, ...STAFF_AND_TEACHER_ROLES],
+  },
+  {
+    key: 'rating',
+    title: 'Rating',
+    path: '/rating',
+    order: 10,
+    roles: [Role.STUDENT],
+  },
+  {
+    key: 'gifts',
+    title: 'Gifts',
+    path: '/gifts',
+    order: 11,
+    roles: [Role.STUDENT],
+  },
 ] as const satisfies readonly LabelDefinition[];
