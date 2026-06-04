@@ -1,12 +1,14 @@
-import { diskStorage } from "multer";
-import { extname } from "path";
-import { BadRequestException } from "@nestjs/common";
-import { mkdirSync } from "fs";
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { BadRequestException } from '@nestjs/common';
+import { mkdirSync } from 'fs';
 
-const uploadDir = "./uploads/videos";
+const uploadDir = './uploads/videos';
 mkdirSync(uploadDir, { recursive: true });
 
-export const multerVideoConfig = {
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+
+export const multerVideoConfig: MulterOptions = {
   storage: diskStorage({
     destination: (req, file, cb) => {
       cb(null, uploadDir);
@@ -15,7 +17,7 @@ export const multerVideoConfig = {
     filename: (req, file, cb) => {
       const uniqueName =
         Date.now() +
-        "-" +
+        '-' +
         Math.round(Math.random() * 1e9) +
         extname(file.originalname);
 
@@ -25,17 +27,17 @@ export const multerVideoConfig = {
 
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
-      "video/mp4",
-      "video/mpeg",
-      "video/quicktime", // mov
-      "video/x-msvideo", // avi
-      "video/webm",
+      'video/mp4',
+      'video/mpeg',
+      'video/quicktime', // mov
+      'video/x-msvideo', // avi
+      'video/webm',
     ];
 
     if (!allowedTypes.includes(file.mimetype)) {
       return cb(
-        new BadRequestException("Faqat video fayl yuklash mumkin") as any,
-        false
+        new BadRequestException('Faqat video fayl yuklash mumkin'),
+        false,
       );
     }
 

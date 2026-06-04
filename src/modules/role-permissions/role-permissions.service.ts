@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import PrismaService from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class RolePermissionsService {
@@ -9,15 +14,17 @@ export class RolePermissionsService {
 
   async create(dto: CreateRolePermissionDto) {
     const existing = await this.prisma.rolePermission.findFirst({
-        where: {
-            name: dto.name,
-            category: dto.label, // mapped to category
-            branchId: dto.branchId || null
-        }
+      where: {
+        name: dto.name,
+        category: dto.label, // mapped to category
+        branchId: dto.branchId || null,
+      },
     });
 
     if (existing) {
-        throw new ConflictException(`Bu kasb (rol) uchun ${dto.label} huquqlari allaqachon mavjud.`);
+      throw new ConflictException(
+        `Bu kasb (rol) uchun ${dto.label} huquqlari allaqachon mavjud.`,
+      );
     }
 
     return this.prisma.rolePermission.create({
@@ -35,7 +42,7 @@ export class RolePermissionsService {
 
   findAll() {
     return this.prisma.rolePermission.findMany({
-        orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -43,15 +50,16 @@ export class RolePermissionsService {
     const rolePermission = await this.prisma.rolePermission.findUnique({
       where: { id },
     });
-    if (!rolePermission) throw new NotFoundException('Role permission topilmadi');
+    if (!rolePermission)
+      throw new NotFoundException('Role permission topilmadi');
     return rolePermission;
   }
 
   async update(id: number, dto: UpdateRolePermissionDto) {
     await this.findOne(id);
-    const data: any = { ...dto };
-    if (dto.label) data.category = dto.label;
-    delete data.label;
+    const { label, ...rest } = dto;
+    const data: Prisma.RolePermissionUpdateInput = { ...rest };
+    if (label) data.category = label;
 
     return this.prisma.rolePermission.update({
       where: { id },

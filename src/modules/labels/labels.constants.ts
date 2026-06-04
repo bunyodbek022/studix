@@ -1,11 +1,7 @@
 import { Role } from '@prisma/client';
 import type { LabelDefinition } from './labels.types';
 
-const STAFF_ROLES = [
-  Role.SUPERADMIN,
-  Role.ADMIN,
-  Role.CREATOR,
-] as const;
+const STAFF_ROLES = [Role.SUPERADMIN, Role.ADMIN, Role.CREATOR] as const;
 
 const STAFF_AND_TEACHER_ROLES = [...STAFF_ROLES, Role.TEACHER] as const;
 

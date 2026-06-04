@@ -8,7 +8,7 @@ import {
   IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Role, UserStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateUserDto {
@@ -20,7 +20,7 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({type: 'string', format: 'binary'})
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
   @IsString()
   photo?: string;
@@ -52,5 +52,4 @@ export class CreateUserDto {
   @IsInt()
   @Type(() => Number)
   branchId?: number;
-
 }

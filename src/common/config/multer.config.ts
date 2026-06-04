@@ -3,7 +3,9 @@ import { extname } from 'path';
 import { BadRequestException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 
-export const multerConfig = {
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+
+export const multerConfig: MulterOptions = {
   storage: diskStorage({
     destination: './uploads',
     filename: (req, file, cb) => {
@@ -11,13 +13,18 @@ export const multerConfig = {
       cb(null, uniqueName);
     },
   }),
-  fileFilter: (req: any, file: Express.Multer.File, cb: any) => {
+  fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp/;
     const isValid = allowedTypes.test(extname(file.originalname).toLowerCase());
     if (isValid) {
       cb(null, true);
     } else {
-      cb(new BadRequestException('Faqat rasm fayllari qabul qilinadi (jpeg, jpg, png, webp)'), false);
+      cb(
+        new BadRequestException(
+          'Faqat rasm fayllari qabul qilinadi (jpeg, jpg, png, webp)',
+        ),
+        false,
+      );
     }
   },
   limits: {

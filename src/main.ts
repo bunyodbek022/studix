@@ -8,55 +8,64 @@ import * as express from 'express';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
-    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }));
-    app.use(cookieParser())
-    app.use('/uploads', express.static('uploads'));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  );
+  app.use(cookieParser());
+  app.use('/uploads', express.static('uploads'));
 
-    app.enableCors({
+  app.enableCors({
     origin: (origin, callback) => {
-        const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:4000',
-            'https://studix-jo89.vercel.app',
-            'https://studix-frontend.vercel.app',
-        ];
-        
-        // Vercel preview URL'larini ham ruxsat berish
-        const vercelPreview = /^https:\/\/studix-frontend.*\.vercel\.app$/;
-        
-        if (!origin || allowedOrigins.includes(origin) || vercelPreview.test(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS blocked: ${origin}`));
-        }
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:4000',
+        'https://studix-jo89.vercel.app',
+        'https://studix-frontend.vercel.app',
+      ];
+
+      // Vercel preview URL'larini ham ruxsat berish
+      const vercelPreview = /^https:\/\/studix-frontend.*\.vercel\.app$/;
+
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        vercelPreview.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-});
+  });
 
-    app.setGlobalPrefix('api/v1')
-    const documentFactory = () => SwaggerModule.createDocument(app, config)
+  app.setGlobalPrefix('api/v1');
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
 
-    SwaggerModule.setup('api/v1', app, documentFactory, {
-        swaggerOptions: {
-            withCredentials: true,
-            filter: true,
-            persistAuthorization: true,
-            displayRequestDuration: true,
-        },
-    });
+  SwaggerModule.setup('api/v1', app, documentFactory, {
+    swaggerOptions: {
+      withCredentials: true,
+      filter: true,
+      persistAuthorization: true,
+      displayRequestDuration: true,
+    },
+  });
 
-    const uploadsPath = join(process.cwd(), 'uploads');
+  const uploadsPath = join(process.cwd(), 'uploads');
 
-    app.useStaticAssets(uploadsPath, {
-        prefix: '/uploads/',
-    });
+  app.useStaticAssets(uploadsPath, {
+    prefix: '/uploads/',
+  });
 
-
-    await app.listen(process.env.PORT ?? 3000);
-    console.log("Port: ", process.env.PORT)
+  await app.listen(process.env.PORT ?? 3000);
+  console.log('Port: ', process.env.PORT);
 }
-bootstrap();
+bootstrap().catch(console.error);

@@ -5,7 +5,7 @@ import PrismaModule from 'src/prisma/prisma.module';
 import { MailModule } from 'src/common/mail/mail.module';
 
 @Module({
-    imports: [PrismaModule, MailModule],
+  imports: [PrismaModule, MailModule],
   controllers: [TeachersController],
   providers: [TeachersService],
 })

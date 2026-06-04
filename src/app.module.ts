@@ -19,52 +19,49 @@ import { BranchesModule } from './modules/branches/branches.module';
 import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-        }),
-        PrismaModule,
-        JwtModule.registerAsync({
-            global: true,
-            imports: [ConfigModule],
-            useFactory: async (
-                configService: ConfigService,
-            ): Promise<JwtModuleOptions> => {
-                const secret = configService.get<string>('JWT_SECRET');
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    PrismaModule,
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService): JwtModuleOptions => {
+        const secret = configService.get<string>('JWT_SECRET');
 
-                if (!secret) {
-                    throw new Error('JWT_SECRET is not set');
-                }
+        if (!secret) {
+          throw new Error('JWT_SECRET is not set');
+        }
 
-                const expiresIn = (configService.get<string>('JWT_EXPIRATION_TIME') ?? '1h') as NonNullable<
-                    JwtModuleOptions['signOptions']
-                >['expiresIn'];
+        const expiresIn = (configService.get<string>('JWT_EXPIRATION_TIME') ??
+          '1h') as NonNullable<JwtModuleOptions['signOptions']>['expiresIn'];
 
-                return {
-                    secret,
-                    signOptions: {
-                        expiresIn,
-                    },
-                };
-            },
-            inject: [ConfigService],
-        }),
-        AuthModule,
-        UsersModule,
-        TeachersModule,
-        StudentsModule,
-        CourseModule,
-        GroupModule,
-        LessonsModule,
-        LessonVideosModule,
-        RoomsModule,
-        StudentGroupModule,
-        LabelsModule,
-        CentersModule,
-        BranchesModule,
-        RolePermissionsModule,
-    ],
-    controllers: [],
-    providers: [UserSeeder],
+        return {
+          secret,
+          signOptions: {
+            expiresIn,
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
+    AuthModule,
+    UsersModule,
+    TeachersModule,
+    StudentsModule,
+    CourseModule,
+    GroupModule,
+    LessonsModule,
+    LessonVideosModule,
+    RoomsModule,
+    StudentGroupModule,
+    LabelsModule,
+    CentersModule,
+    BranchesModule,
+    RolePermissionsModule,
+  ],
+  controllers: [],
+  providers: [UserSeeder],
 })
-export class AppModule { }
+export class AppModule {}

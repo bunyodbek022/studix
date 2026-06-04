@@ -1,5 +1,11 @@
-import {BadRequestException,Injectable,InternalServerErrorException,NotFoundException,} from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { MailService } from 'src/common/mail/mail.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -34,7 +40,9 @@ export class UsersService {
         where: { id: branchId },
       });
       if (!existBranch) {
-        throw new BadRequestException(`ID: ${branchId} bo'yicha filial topilmadi`);
+        throw new BadRequestException(
+          `ID: ${branchId} bo'yicha filial topilmadi`,
+        );
       }
     }
 
@@ -42,7 +50,7 @@ export class UsersService {
       where: { email: dto.email, branchId },
     });
     if (exists) {
-      throw new BadRequestException('Bu email allaqachon ro\'yxatdan o\'tgan');
+      throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -61,13 +69,15 @@ export class UsersService {
       select: SELECT_USER,
     });
 
-     try {
-        await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
+    try {
+      await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
     } catch (error) {
-        await this.prisma.user.deleteMany({ where: { email: dto.email } });
-        console.log(error);
-        
-        throw new InternalServerErrorException('Email yuborishda xatolik. User yaratilmadi.');
+      await this.prisma.user.deleteMany({ where: { email: dto.email } });
+      console.log(error);
+
+      throw new InternalServerErrorException(
+        'Email yuborishda xatolik. User yaratilmadi.',
+      );
     }
 
     return {
@@ -106,7 +116,7 @@ export class UsersService {
   async update(id: number, dto: UpdateUserDto) {
     await this.findOne(id);
 
-    const data: any = { ...dto };
+    const data: Prisma.UserUpdateInput = { ...dto };
     if (dto.hire_date) {
       data.hire_date = new Date(dto.hire_date);
     }
@@ -117,7 +127,7 @@ export class UsersService {
       select: SELECT_USER,
     });
 
-    return { message: 'Foydalanuvchi ma\'lumotlari yangilandi', user };
+    return { message: "Foydalanuvchi ma'lumotlari yangilandi", user };
   }
 
   async remove(id: number) {

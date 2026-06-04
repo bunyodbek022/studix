@@ -1,8 +1,8 @@
 import {
-    BadRequestException,
-    ConflictException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -11,211 +11,211 @@ import { FindAllRoomsDto } from './dto/find-all-rooms.dto';
 
 @Injectable()
 export class RoomsService {
-    constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-    async create(dto: CreateRoomDto, currentUser?: { branchId?: number }) {
-        const branchId = dto.branchId ?? currentUser?.branchId;
-        if (!branchId) {
-            throw new BadRequestException('Branch ID is required');
-        }
-
-        const existing = await this.prisma.room.findFirst({
-            where: { name: dto.name, branchId },
-        });
-
-        if (existing) {
-            throw new ConflictException('Bu nomdagi xona allaqachon mavjud');
-        }
-
-        const room = await this.prisma.room.create({
-            data: {
-                name: dto.name,
-                capacity: dto.capacity,
-                branchId,
-            },
-        });
-
-        return {
-            success: true,
-            message: 'Xona yaratildi',
-            data: room,
-        };
+  async create(dto: CreateRoomDto, currentUser?: { branchId?: number }) {
+    const branchId = dto.branchId ?? currentUser?.branchId;
+    if (!branchId) {
+      throw new BadRequestException('Branch ID is required');
     }
 
-    async findAll(query: FindAllRoomsDto, currentUser?: { branchId?: number }) {
-        const { page = 1, limit = 10, search, status } = query;
-        const skip = (page - 1) * limit;
+    const existing = await this.prisma.room.findFirst({
+      where: { name: dto.name, branchId },
+    });
 
-        const where = {
-            status: status ?? { not: 'DELETED' as const },
-            // ADMIN faqat o'z filialini ko'radi
-            ...(currentUser?.branchId && {
-                branchId: currentUser.branchId,
-            }),
-            ...(search && {
-                name: { contains: search, mode: 'insensitive' as const },
-            }),
-        };
-
-        const [rooms, total] = await this.prisma.$transaction([
-            this.prisma.room.findMany({
-                where,
-                orderBy: { created_at: 'desc' },
-                skip,
-                take: limit,
-            }),
-            this.prisma.room.count({ where }),
-        ]);
-
-        return {
-            success: true,
-            data: rooms,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+    if (existing) {
+      throw new ConflictException('Bu nomdagi xona allaqachon mavjud');
     }
 
-    async findOne(id: number) {
-        const room = await this.prisma.room.findUnique({
-            where: { id },
-            include: {
-                _count: {
-                    select: { groups: true },
-                },
-            },
-        });
+    const room = await this.prisma.room.create({
+      data: {
+        name: dto.name,
+        capacity: dto.capacity,
+        branchId,
+      },
+    });
 
-        if (!room) {
-            throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
-        }
+    return {
+      success: true,
+      message: 'Xona yaratildi',
+      data: room,
+    };
+  }
 
-        return {
-            success: true,
-            data: {
-                ...room,
-                groupCount: room._count.groups,
-            },
-        };
+  async findAll(query: FindAllRoomsDto, currentUser?: { branchId?: number }) {
+    const { page = 1, limit = 10, search, status } = query;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      status: status ?? { not: 'DELETED' as const },
+      // ADMIN faqat o'z filialini ko'radi
+      ...(currentUser?.branchId && {
+        branchId: currentUser.branchId,
+      }),
+      ...(search && {
+        name: { contains: search, mode: 'insensitive' as const },
+      }),
+    };
+
+    const [rooms, total] = await this.prisma.$transaction([
+      this.prisma.room.findMany({
+        where,
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.room.count({ where }),
+    ]);
+
+    return {
+      success: true,
+      data: rooms,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findOne(id: number) {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { groups: true },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
     }
 
-    async update(id: number, dto: UpdateRoomDto) {
-        const room = await this.prisma.room.findUnique({ where: { id } });
+    return {
+      success: true,
+      data: {
+        ...room,
+        groupCount: room._count.groups,
+      },
+    };
+  }
 
-        if (!room) {
-            throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
-        }
+  async update(id: number, dto: UpdateRoomDto) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
 
-        if (dto.name && dto.name !== room.name) {
-            const existing = await this.prisma.room.findFirst({
-                where: { name: dto.name, branchId: room.branchId },
-            });
-
-            if (existing) {
-                throw new ConflictException('Bu nomdagi xona allaqachon mavjud');
-            }
-        }
-
-        const updated = await this.prisma.room.update({
-            where: { id },
-            data: dto,
-        });
-
-        return {
-            success: true,
-            message: 'Xona yangilandi',
-            data: updated,
-        };
+    if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
     }
 
-    async archive(id: number) {
-        const room = await this.prisma.room.findUnique({ where: { id } });
+    if (dto.name && dto.name !== room.name) {
+      const existing = await this.prisma.room.findFirst({
+        where: { name: dto.name, branchId: room.branchId },
+      });
 
-        if (!room) {
-            throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
-        }
-
-        if (room.status === 'INACTIVE') {
-            throw new BadRequestException('Bu xona allaqachon arxivda');
-        }
-
-        // Xonada aktiv guruhlar bormi tekshirish
-        const activeGroups = await this.prisma.group.count({
-            where: { roomId: id, status: 'ACTIVE' },
-        });
-
-        if (activeGroups > 0) {
-            throw new BadRequestException(
-                `Xonani arxivga o'tkazish uchun avval ${activeGroups} ta aktiv guruhni boshqa xonaga o'tkazing`,
-            );
-        }
-
-        await this.prisma.room.update({
-            where: { id },
-            data: { status: 'INACTIVE' },
-        });
-
-        return {
-            success: true,
-            message: 'Xona arxivga o\'tkazildi',
-        };
+      if (existing) {
+        throw new ConflictException('Bu nomdagi xona allaqachon mavjud');
+      }
     }
 
-    async restore(id: number) {
-        const room = await this.prisma.room.findUnique({ where: { id } });
+    const updated = await this.prisma.room.update({
+      where: { id },
+      data: dto,
+    });
 
-        if (!room) {
-            throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
-        }
+    return {
+      success: true,
+      message: 'Xona yangilandi',
+      data: updated,
+    };
+  }
 
-        if (room.status !== 'INACTIVE') {
-            throw new BadRequestException('Bu xona arxivda emas');
-        }
+  async archive(id: number) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
 
-        await this.prisma.room.update({
-            where: { id },
-            data: { status: 'ACTIVE' },
-        });
-
-        return {
-            success: true,
-            message: 'Xona faollashtirildi',
-        };
+    if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
     }
 
-    async remove(id: number) {
-        const room = await this.prisma.room.findUnique({ where: { id } });
-
-        if (!room) {
-            throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
-        }
-
-        if (room.status === 'DELETED') {
-            throw new BadRequestException('Bu xona allaqachon o\'chirilgan');
-        }
-
-        // Aktiv guruhlar bormi tekshirish
-        const activeGroups = await this.prisma.group.count({
-            where: { roomId: id, status: 'ACTIVE' },
-        });
-
-        if (activeGroups > 0) {
-            throw new BadRequestException(
-                `Xonani o'chirish uchun avval ${activeGroups} ta aktiv guruhni boshqa xonaga o'tkazing`,
-            );
-        }
-
-        await this.prisma.room.update({
-            where: { id },
-            data: { status: 'DELETED' },
-        });
-
-        return {
-            success: true,
-            message: 'Xona o\'chirildi',
-        };
+    if (room.status === 'INACTIVE') {
+      throw new BadRequestException('Bu xona allaqachon arxivda');
     }
+
+    // Xonada aktiv guruhlar bormi tekshirish
+    const activeGroups = await this.prisma.group.count({
+      where: { roomId: id, status: 'ACTIVE' },
+    });
+
+    if (activeGroups > 0) {
+      throw new BadRequestException(
+        `Xonani arxivga o'tkazish uchun avval ${activeGroups} ta aktiv guruhni boshqa xonaga o'tkazing`,
+      );
+    }
+
+    await this.prisma.room.update({
+      where: { id },
+      data: { status: 'INACTIVE' },
+    });
+
+    return {
+      success: true,
+      message: "Xona arxivga o'tkazildi",
+    };
+  }
+
+  async restore(id: number) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
+
+    if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
+    }
+
+    if (room.status !== 'INACTIVE') {
+      throw new BadRequestException('Bu xona arxivda emas');
+    }
+
+    await this.prisma.room.update({
+      where: { id },
+      data: { status: 'ACTIVE' },
+    });
+
+    return {
+      success: true,
+      message: 'Xona faollashtirildi',
+    };
+  }
+
+  async remove(id: number) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
+
+    if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
+    }
+
+    if (room.status === 'DELETED') {
+      throw new BadRequestException("Bu xona allaqachon o'chirilgan");
+    }
+
+    // Aktiv guruhlar bormi tekshirish
+    const activeGroups = await this.prisma.group.count({
+      where: { roomId: id, status: 'ACTIVE' },
+    });
+
+    if (activeGroups > 0) {
+      throw new BadRequestException(
+        `Xonani o'chirish uchun avval ${activeGroups} ta aktiv guruhni boshqa xonaga o'tkazing`,
+      );
+    }
+
+    await this.prisma.room.update({
+      where: { id },
+      data: { status: 'DELETED' },
+    });
+
+    return {
+      success: true,
+      message: "Xona o'chirildi",
+    };
+  }
 }

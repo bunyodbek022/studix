@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,6 +20,7 @@ import { ApiConsumes, ApiCookieAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Role } from '@prisma/client';
+import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import { Roles } from 'src/common/decorators/role.decorator';
 
 @Controller('users')
@@ -15,39 +28,49 @@ import { Roles } from 'src/common/decorators/role.decorator';
 @ApiCookieAuth('access_token')
 @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
-    @Post()
-    @UseInterceptors(FileInterceptor('photo', multerConfig))
-    @ApiConsumes("multipart/form-data")
-    create(
-        @Body() createUserDto: CreateUserDto,
-        @UploadedFile() file: Express.Multer.File,
-        @Req() req: any,
-    ) {
-        const imagePath = file ? file.filename : undefined;
-        return this.usersService.create({ ...createUserDto, photo: imagePath }, req['user']);
-    }
+  @Post()
+  @UseInterceptors(FileInterceptor('photo', multerConfig))
+  @ApiConsumes('multipart/form-data')
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: RequestWithUser,
+  ) {
+    const imagePath = file ? file.filename : undefined;
+    return this.usersService.create(
+      { ...createUserDto, photo: imagePath },
+      req.user,
+    );
+  }
 
-    @Get()
-    findAll(@Req() req: any) {
-        return this.usersService.findAll(req['user']);
-    }
+  @Get()
+  findAll(@Req() req: RequestWithUser) {
+    return this.usersService.findAll(req.user);
+  }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(+id);
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(+id);
+  }
 
-    @Patch(':id')
-    @UseInterceptors(FileInterceptor('photo', multerConfig))
-    update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @UploadedFile() file: Express.Multer.File,) {
-        const imagePath = file ? file.filename : undefined;
-        return this.usersService.update(+id, { ...updateUserDto, photo: imagePath });
-    }
+  @Patch(':id')
+  @UseInterceptors(FileInterceptor('photo', multerConfig))
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const imagePath = file ? file.filename : undefined;
+    return this.usersService.update(+id, {
+      ...updateUserDto,
+      photo: imagePath,
+    });
+  }
 
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.usersService.remove(+id);
-    }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(+id);
+  }
 }

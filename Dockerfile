@@ -1,35 +1,46 @@
+# Base image
 FROM node:20-alpine AS builder
 
+# Create app directory
 WORKDIR /app
 
-# Install dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 COPY prisma ./prisma/
+
+# Install app dependencies
 RUN npm ci
+
+# Copy app source code
+COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build application
-COPY . .
+# Build the app
 RUN npm run build
 
-# Production Stage
+# Production image
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-# Only install production dependencies
-RUN npm ci --only=production
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
 
-# Copy built artifacts and prisma schema
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# Generate Prisma client for production image
-RUN npx prisma generate
+# Create uploads directory with proper permissions
+RUN mkdir -p uploads/videos && chown -R node:node uploads
 
+# Switch to non-root user
+USER node
+
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "run", "start:prod"]
+# Start server and run migrations
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]

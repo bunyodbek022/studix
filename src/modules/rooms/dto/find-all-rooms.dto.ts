@@ -4,27 +4,27 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class FindAllRoomsDto {
-    @ApiPropertyOptional({ example: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    page?: number = 1;
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number = 1;
 
-    @ApiPropertyOptional({ example: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    limit?: number = 10;
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number = 10;
 
-    @ApiPropertyOptional({ example: 'Room A' })
-    @IsOptional()
-    @IsString()
-    search?: string;
+  @ApiPropertyOptional({ example: 'Room A' })
+  @IsOptional()
+  @IsString()
+  search?: string;
 
-    @ApiPropertyOptional({ enum: Status, example: Status.ACTIVE })
-    @IsOptional()
-    @IsEnum(Status)
-    status?: Status;
+  @ApiPropertyOptional({ enum: Status, example: Status.ACTIVE })
+  @IsOptional()
+  @IsEnum(Status)
+  status?: Status;
 }

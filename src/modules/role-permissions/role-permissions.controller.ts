@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { RolePermissionsService } from './role-permissions.service';
 import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
@@ -11,7 +21,9 @@ import { Role } from '@prisma/client';
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.SUPERADMIN, Role.CREATOR) // Only Creator and Superadmin can manage permissions
 export class RolePermissionsController {
-  constructor(private readonly rolePermissionsService: RolePermissionsService) {}
+  constructor(
+    private readonly rolePermissionsService: RolePermissionsService,
+  ) {}
 
   @Post()
   create(@Body() createRolePermissionDto: CreateRolePermissionDto) {
@@ -30,8 +42,8 @@ export class RolePermissionsController {
 
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number, 
-    @Body() updateRolePermissionDto: UpdateRolePermissionDto
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateRolePermissionDto: UpdateRolePermissionDto,
   ) {
     return this.rolePermissionsService.update(id, updateRolePermissionDto);
   }

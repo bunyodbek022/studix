@@ -1,24 +1,34 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role, Label, RoleActions } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { PERMISSIONS_KEY } from '../decorators/permission.decorator';
+import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector, private prisma: PrismaService) {}
+  constructor(
+    private reflector: Reflector,
+    private prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermission = this.reflector.getAllAndOverride<{ label: Label; action: RoleActions }>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredPermission = this.reflector.getAllAndOverride<{
+      label: Label;
+      action: RoleActions;
+    }>(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
 
     if (!requiredPermission) {
       return true; // No specific permissions required
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    const user = req.user;
 
     if (!user) {
       return false;
@@ -36,7 +46,9 @@ export class PermissionsGuard implements CanActivate {
       const customRoleName = user.customRole || user.position;
 
       if (!customRoleName) {
-        throw new ForbiddenException('User does not have an assigned profession/role');
+        throw new ForbiddenException(
+          'User does not have an assigned profession/role',
+        );
       }
 
       const rolePermission = await this.prisma.rolePermission.findFirst({
@@ -46,10 +58,15 @@ export class PermissionsGuard implements CanActivate {
         },
       });
 
-      if (rolePermission && rolePermission.actions.includes(requiredPermission.action)) {
+      if (
+        rolePermission &&
+        rolePermission.actions.includes(requiredPermission.action)
+      ) {
         return true;
       }
-      throw new ForbiddenException(`You do not have ${requiredPermission.action} permission for ${requiredPermission.label}`);
+      throw new ForbiddenException(
+        `You do not have ${requiredPermission.action} permission for ${requiredPermission.label}`,
+      );
     }
 
     return false;

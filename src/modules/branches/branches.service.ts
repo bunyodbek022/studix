@@ -17,7 +17,7 @@ export class BranchesService {
     return this.prisma.branch.findMany({
       include: {
         center: { select: { id: true, name: true } },
-      }
+      },
     });
   }
 
@@ -26,7 +26,7 @@ export class BranchesService {
       where: { id },
       include: {
         center: { select: { id: true, name: true } },
-      }
+      },
     });
   }
 

@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateCenterDto } from './dto/create-center.dto';
 import { UpdateCenterDto } from './dto/update-center.dto';
 import PrismaService from 'src/prisma/prisma.service';
 import { MailService } from 'src/common/mail/mail.service';
 import * as bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import { Role, Center, User } from '@prisma/client';
 
 @Injectable()
 export class CentersService {
@@ -18,13 +22,13 @@ export class CentersService {
       where: { email: dto.creatorEmail },
     });
     if (exists) {
-      throw new BadRequestException('Bu email allaqachon ro\'yxatdan o\'tgan');
+      throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
     }
 
     const hashedPassword = await bcrypt.hash(dto.creatorPassword, 10);
 
-    let createdUser;
-    let createdCenter;
+    let createdUser: User;
+    let createdCenter: Center;
 
     try {
       const result = await this.prisma.$transaction(async (tx) => {
@@ -55,11 +59,17 @@ export class CentersService {
       createdCenter = result.center;
     } catch (error) {
       console.log(error);
-      throw new InternalServerErrorException('Markaz yaratishda xatolik yuz berdi');
+      throw new InternalServerErrorException(
+        'Markaz yaratishda xatolik yuz berdi',
+      );
     }
 
     try {
-      await this.mail.sendCredentials(dto.creatorEmail, dto.creatorFullName, dto.creatorPassword);
+      await this.mail.sendCredentials(
+        dto.creatorEmail,
+        dto.creatorFullName,
+        dto.creatorPassword,
+      );
     } catch (error) {
       // It's tricky to rollback a transaction after it's committed just because email failed.
       // But we can just log it or notify the superadmin. We won't delete the center.
@@ -67,7 +77,8 @@ export class CentersService {
     }
 
     return {
-      message: 'Markaz va markaz rahbari muvaffaqiyatli yaratildi. Parol emailga yuborildi (agar sozlamalar ishlagan bo\'lsa).',
+      message:
+        "Markaz va markaz rahbari muvaffaqiyatli yaratildi. Parol emailga yuborildi (agar sozlamalar ishlagan bo'lsa).",
       center: createdCenter,
       creator: {
         id: createdUser.id,
@@ -81,10 +92,10 @@ export class CentersService {
     return this.prisma.center.findMany({
       include: {
         creator: {
-          select: { id: true, fullName: true, email: true, phone: true }
+          select: { id: true, fullName: true, email: true, phone: true },
         },
         branches: true,
-      }
+      },
     });
   }
 
@@ -93,10 +104,10 @@ export class CentersService {
       where: { id },
       include: {
         creator: {
-          select: { id: true, fullName: true, email: true, phone: true }
+          select: { id: true, fullName: true, email: true, phone: true },
         },
         branches: true,
-      }
+      },
     });
   }
 
@@ -116,7 +127,7 @@ export class CentersService {
   remove(id: number) {
     return this.prisma.center.update({
       where: { id },
-      data: { status: 'INACTIVE' }
+      data: { status: 'INACTIVE' },
     });
   }
 }
