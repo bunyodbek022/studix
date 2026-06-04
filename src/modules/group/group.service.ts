@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { Status } from '@prisma/client';
+import { Status, Role } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
