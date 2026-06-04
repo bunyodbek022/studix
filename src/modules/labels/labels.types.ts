@@ -7,7 +7,12 @@ export type LabelKey =
   | 'courses'
   | 'groups'
   | 'lessons'
-  | 'rooms';
+  | 'rooms'
+  | 'payments'
+  | 'profile'
+  | 'rating-gifts'
+  | 'rating'
+  | 'gifts';
 
 export type LabelTitle =
   | 'Dashboard'
@@ -16,7 +21,11 @@ export type LabelTitle =
   | 'Courses'
   | 'Groups'
   | 'Lessons'
-  | 'Rooms';
+  | 'Rooms'
+  | 'To\'lovlar'
+  | 'Ma\'lumotlarim'
+  | 'Rating'
+  | 'Gifts';
 
 export interface LabelDefinition {
   key: LabelKey;

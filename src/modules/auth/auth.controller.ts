@@ -34,26 +34,24 @@ export class AuthController {
       throw new BadRequestException('Invalid role');
     }
 
-    res.cookie('access_token', result.token, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    @Get('auth/me')
+    @UseGuards(AuthGuard)
+    async getMe(@Req() req: any) {
+        // req.user contains the decoded JWT payload injected by AuthGuard
+        return this.authService.getMe(req.user);
+    }
 
-    console.log(result.role);
-    return res.json({
-      success: true,
-      message: result.message,
-      token: result.token,
-      role: result.role,
-    });
-  }
-
-  @Get('auth/me')
-  @UseGuards(AuthGuard)
-  async getMe(@Req() req: any) {
-    // req.user contains the decoded JWT payload injected by AuthGuard
-    return this.authService.getMe(req.user);
-  }
+    @Post('auth/logout')
+    async logout(@Res() res: Response) {
+        res.clearCookie('access_token', {
+            httpOnly: true,
+            path: '/',
+        });
+        return res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    }
 }
 
 const USER_ROLES = [Role.SUPERADMIN, Role.ADMIN, Role.CREATOR] as string[];
