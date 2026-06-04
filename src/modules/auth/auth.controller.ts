@@ -1,11 +1,5 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Param,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Param, Post, Res, Get, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { AuthService } from './auth.service';
 import { loginUserDto } from './dto/login-user.dto';
 import type { Response } from 'express';
@@ -52,6 +46,13 @@ export class AuthController {
       token: result.token,
       role: result.role,
     });
+  }
+
+  @Get('auth/me')
+  @UseGuards(AuthGuard)
+  async getMe(@Req() req: any) {
+    // req.user contains the decoded JWT payload injected by AuthGuard
+    return this.authService.getMe(req.user);
   }
 }
 
