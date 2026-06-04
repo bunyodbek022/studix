@@ -20,12 +20,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Update directory path as needed
-            cd /path/to/your/project/Backend
+            cd /var/www/devStories/backend
             git pull origin main
-            
-            # Rebuild and restart containers
+            docker compose down
             docker compose up -d --build
-            
-            # Clean up old images
             docker image prune -f
