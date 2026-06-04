@@ -34,8 +34,22 @@ export class AuthController {
       throw new BadRequestException('Invalid role');
     }
 
-    @Get('auth/me')
-    @UseGuards(AuthGuard)
+    res.cookie('access_token', result.token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    console.log(result.role);
+    return res.json({
+      success: true,
+      message: result.message,
+      token: result.token,
+      role: result.role,
+    });
+  }
+
+  @Get('auth/me')
+  @UseGuards(AuthGuard)
     async getMe(@Req() req: any) {
         // req.user contains the decoded JWT payload injected by AuthGuard
         return this.authService.getMe(req.user);
