@@ -4,12 +4,13 @@ FROM node:20-alpine AS builder
 # Create app directory
 WORKDIR /app
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
-# Install app dependencies
-RUN npm ci
+# Install pnpm and app dependencies
+RUN npm install -g pnpm
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy app source code
 COPY . .
@@ -18,7 +19,7 @@ COPY . .
 RUN npx prisma generate
 
 # Build the app
-RUN npm run build
+RUN pnpm run build
 
 # Production image
 FROM node:20-alpine
