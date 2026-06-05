@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
@@ -32,8 +33,8 @@ export class BranchesController {
 
   @Get()
   @Roles(Role.SUPERADMIN, Role.CREATOR)
-  findAll() {
-    return this.branchesService.findAll();
+  findAll(@Req() req: Request ) {
+    return this.branchesService.findAll(req["user"]);
   }
 
   @Get(':id')

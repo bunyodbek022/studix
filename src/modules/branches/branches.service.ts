@@ -13,8 +13,9 @@ export class BranchesService {
     });
   }
 
-  findAll() {
+  findAll(currentUser: {centerId: number}) {
     return this.prisma.branch.findMany({
+      where:{centerId:currentUser.centerId},
       include: {
         center: { select: { id: true, name: true } },
       },
