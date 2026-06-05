@@ -34,6 +34,8 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
+
+RUN npx prisma generate
 # Create uploads directory with proper permissions
 RUN mkdir -p uploads/videos && chown -R node:node uploads
 
@@ -44,4 +46,4 @@ USER node
 EXPOSE 3000
 
 # Start server and run migrations
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+CMD ["node", "dist/src/main"]

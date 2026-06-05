@@ -28,7 +28,7 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-studix}?schema=public
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME:-1h}
       PORT: 3000
