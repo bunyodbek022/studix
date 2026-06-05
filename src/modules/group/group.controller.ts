@@ -58,8 +58,9 @@ export class GroupsController {
       "Tizimdagi barcha faol guruhlar ro'yxatini qaytaradi.\n\n" +
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
-  getAllGroup(@Req() req: RequestWithUser) {
-    return this.groupService.getAllGroup(req.user);
+  @ApiQuery({ name: 'branchId', required: false, type: Number, example: 1 })
+  getAllGroup(@Req() req: RequestWithUser, @Query('branchId') branchId?: string) {
+    return this.groupService.getAllGroup(req.user, branchId ? +branchId : undefined);
   }
 
   @Get(':id')
@@ -71,8 +72,8 @@ export class GroupsController {
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.groupService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.groupService.findOne(id, req.user);
   }
 
   @Get(':id/students')
@@ -95,8 +96,9 @@ export class GroupsController {
   getStudents(
     @Param('id', ParseIntPipe) id: number,
     @Query() query: PaginationSearchDto,
+    @Req() req: RequestWithUser,
   ) {
-    return this.groupService.getStudents(id, query);
+    return this.groupService.getStudents(id, query, req.user);
   }
 
   @Get(':id/lessons')
@@ -119,8 +121,9 @@ export class GroupsController {
   getLessons(
     @Param('id', ParseIntPipe) id: number,
     @Query() query: PaginationSearchDto,
+    @Req() req: RequestWithUser,
   ) {
-    return this.groupService.getLessons(id, query);
+    return this.groupService.getLessons(id, query, req.user);
   }
 
   @Get(':id/schedule')
@@ -132,8 +135,8 @@ export class GroupsController {
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
-  getSchedule(@Param('id', ParseIntPipe) id: number) {
-    return this.groupService.getSchedule(id);
+  getSchedule(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.groupService.getSchedule(id, req.user);
   }
 
   @Get(':id/attendance-days')
@@ -163,11 +166,13 @@ export class GroupsController {
   getAttendanceDays(
     @Param('id', ParseIntPipe) id: number,
     @Query('month', ParseIntPipe) month: number,
+    @Req() req: RequestWithUser,
     @Query('year') year?: string,
   ) {
     return this.groupService.getAttendanceDays(
       id,
       month,
+      req.user,
       year ? +year : undefined,
     );
   }

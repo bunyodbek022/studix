@@ -84,6 +84,7 @@ export class TeachersController {
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String, example: 'Jasur' })
+  @ApiQuery({ name: 'branchId', required: false, type: Number, example: 1 })
   findAll(@Query() query: FindAllTeachersDto, @Req() req: RequestWithUser) {
     return this.teachersService.findAll(query, req.user);
   }
@@ -96,8 +97,8 @@ export class TeachersController {
       "Muayyan o'qituvchining shaxsiy ma'lumotlarini, rating ballarini va u o'tadigan faol guruhlarni uning ID raqami orqali qaytaradi.\n\n" +
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.teachersService.findOne(id, req.user);
   }
 
   @Get(':id/groups')
@@ -108,8 +109,8 @@ export class TeachersController {
       "O'qituvchi dars beradigan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
-  getGroups(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.getGroups(id);
+  getGroups(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.teachersService.getGroups(id, req.user);
   }
 
   @Patch(':id')

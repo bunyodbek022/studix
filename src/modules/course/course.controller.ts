@@ -67,6 +67,7 @@ export class CourseController {
     enum: ['ACTIVE', 'INACTIVE'],
     example: 'ACTIVE',
   })
+  @ApiQuery({ name: 'branchId', required: true, type: Number, example: 1 })
   findAll(@Query() query: FindAllCoursesDto, @Req() req: RequestWithUser) {
     return this.courseService.findAll(query, req.user);
   }
@@ -80,8 +81,8 @@ export class CourseController {
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.courseService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.courseService.findOne(id, req.user);
   }
 
   @Patch(':id')

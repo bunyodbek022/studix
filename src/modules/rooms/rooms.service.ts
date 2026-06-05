@@ -43,14 +43,15 @@ export class RoomsService {
   }
 
   async findAll(query: FindAllRoomsDto, currentUser?: { branchId?: number }) {
-    const { page = 1, limit = 10, search, status } = query;
+    const { page = 1, limit = 10, search, status, branchId } = query;
     const skip = (page - 1) * limit;
+
+    const targetBranchId = currentUser?.branchId || branchId;
 
     const where = {
       status: status ?? { not: 'DELETED' as const },
-      // ADMIN faqat o'z filialini ko'radi
-      ...(currentUser?.branchId && {
-        branchId: currentUser.branchId,
+      ...(targetBranchId && {
+        branchId: targetBranchId,
       }),
       ...(search && {
         name: { contains: search, mode: 'insensitive' as const },
@@ -79,7 +80,7 @@ export class RoomsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUser?: { branchId?: number }) {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {
@@ -90,6 +91,10 @@ export class RoomsService {
     });
 
     if (!room) {
+      throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
+    }
+
+    if (currentUser?.branchId && room.branchId !== currentUser.branchId) {
       throw new NotFoundException(`ID: ${id} bo'yicha xona topilmadi`);
     }
 

@@ -53,14 +53,15 @@ export class CourseService {
   }
 
   async findAll(query: FindAllCoursesDto, currentUser?: { branchId?: number }) {
-    const { page = 1, limit = 10, search, status } = query;
+    const { page = 1, limit = 10, search, status, branchId } = query;
     const skip = (page - 1) * limit;
+
+    const targetBranchId = currentUser?.branchId || branchId;
 
     const where = {
       ...(status ? { status } : { status: 'ACTIVE' as const }),
-      // ADMIN faqat o'z filialini ko'radi
-      ...(currentUser?.branchId && {
-        branchId: currentUser.branchId,
+      ...(targetBranchId && {
+        branchId: targetBranchId,
       }),
       ...(search && {
         OR: [
@@ -92,7 +93,7 @@ export class CourseService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUser?: { branchId?: number }) {
     const course = await this.prisma.course.findUnique({
       where: { id },
       include: {
@@ -103,6 +104,10 @@ export class CourseService {
     });
 
     if (!course) {
+      throw new NotFoundException(`ID: ${id} bo'yicha kurs topilmadi`);
+    }
+
+    if (currentUser?.branchId && course.branchId !== currentUser.branchId) {
       throw new NotFoundException(`ID: ${id} bo'yicha kurs topilmadi`);
     }
 

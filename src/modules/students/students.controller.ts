@@ -18,6 +18,7 @@ import {
     ApiCookieAuth,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -90,8 +91,9 @@ export class StudentsController {
             '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
             '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
     })
-    findAll(@Req() req: RequestWithUser) {
-        return this.studentsService.findAll(req.user);
+    @ApiQuery({ name: 'branchId', required: false, type: Number, example: 1 })
+    findAll(@Req() req: RequestWithUser, @Query('branchId') branchId?: string) {
+        return this.studentsService.findAll(req.user, branchId ? +branchId : undefined);
     }
 
     @Get(':id')
@@ -105,8 +107,8 @@ export class StudentsController {
             '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
             '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
     })
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.studentsService.findOne(id);
+    findOne(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+        return this.studentsService.findOne(id, req.user);
     }
 
     @Get(':id/group-summary')
@@ -124,8 +126,8 @@ export class StudentsController {
         description: 'Student ID',
         example: 1,
     })
-    async getGroupSummary(@Param('id', ParseIntPipe) id: number) {
-        return this.studentsService.getGroupSummary(id);
+    async getGroupSummary(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+        return this.studentsService.getGroupSummary(id, req.user);
     }
 
     @Get(':id/groups')
@@ -137,8 +139,8 @@ export class StudentsController {
             "Berilgan o'quvchi biriktirilgan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
             '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
     })
-    getGroups(@Param('id', ParseIntPipe) id: number) {
-        return this.studentsService.getGroups(id);
+    getGroups(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+        return this.studentsService.getGroups(id, req.user);
     }
 
     @Get(':studentId/groups/:groupId/attendance-details')
@@ -154,8 +156,9 @@ export class StudentsController {
     async getAttendanceDetails(
         @Param('studentId', ParseIntPipe) studentId: number,
         @Param('groupId', ParseIntPipe) groupId: number,
+        @Req() req: RequestWithUser,
     ) {
-        return this.studentsService.getAttendanceDetails(studentId, groupId);
+        return this.studentsService.getAttendanceDetails(studentId, groupId, req.user);
     }
 
     @Get(':studentId/groups/:groupId/homeworks')
@@ -171,8 +174,9 @@ export class StudentsController {
     async getHomeworks(
         @Param('studentId', ParseIntPipe) studentId: number,
         @Param('groupId', ParseIntPipe) groupId: number,
+        @Req() req: RequestWithUser,
     ) {
-        return this.studentsService.getHomeworks(studentId, groupId);
+        return this.studentsService.getHomeworks(studentId, groupId, req.user);
     }
 
     @Patch(':id')

@@ -79,13 +79,14 @@ export class StudentsService {
     };
   }
 
-  async findAll(currentUser?: { branchId?: number }) {
+  async findAll(currentUser?: { branchId?: number }, queryBranchId?: number) {
+    const targetBranchId = currentUser?.branchId || queryBranchId;
+
     const students = await this.prisma.student.findMany({
       where: {
         status: { not: 'DELETED' },
-        // ADMIN faqat o'z filialini ko'radi
-        ...(currentUser?.branchId && {
-          branchId: currentUser.branchId,
+        ...(targetBranchId && {
+          branchId: targetBranchId,
         }),
       },
       select: SELECT_STUDENT,
@@ -98,11 +99,12 @@ export class StudentsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUser?: { branchId?: number }) {
     const student = await this.prisma.student.findUnique({
       where: { id },
       select: {
         ...SELECT_STUDENT,
+        branchId: true,
         StudentGroups: {
           select: {
             status: true,
@@ -128,14 +130,18 @@ export class StudentsService {
       throw new NotFoundException(`ID: ${id} bo'yicha o'quvchi topilmadi`);
     }
 
+    if (currentUser?.branchId && student.branchId !== currentUser.branchId) {
+      throw new NotFoundException(`ID: ${id} bo'yicha o'quvchi topilmadi`);
+    }
+
     return {
       success: true,
       data: student,
     };
   }
 
-  async getGroups(id: number) {
-    await this.findOne(id);
+  async getGroups(id: number, currentUser?: { branchId?: number }) {
+    await this.findOne(id, currentUser);
 
     const groups = await this.prisma.studentGroup.findMany({
       where: { studentId: id },
@@ -164,7 +170,9 @@ export class StudentsService {
     };
   }
 
-  async getGroupSummary(studentId: number) {
+  async getGroupSummary(studentId: number, currentUser?: { branchId?: number }) {
+    await this.findOne(studentId, currentUser);
+
     const studentGroups = await this.prisma.studentGroup.findMany({
       where: {
         studentId,
@@ -227,7 +235,9 @@ export class StudentsService {
     return { success: true, data };
   }
 
-  async getAttendanceDetails(studentId: number, groupId: number) {
+  async getAttendanceDetails(studentId: number, groupId: number, currentUser?: { branchId?: number }) {
+    await this.findOne(studentId, currentUser);
+
     const studentGroup = await this.prisma.studentGroup.findUnique({
       where: {
         groupId_studentId: { groupId, studentId },
@@ -285,7 +295,9 @@ export class StudentsService {
     };
   }
 
-  async getHomeworks(studentId: number, groupId: number) {
+  async getHomeworks(studentId: number, groupId: number, currentUser?: { branchId?: number }) {
+    await this.findOne(studentId, currentUser);
+
     const studentGroup = await this.prisma.studentGroup.findUnique({
       where: {
         groupId_studentId: { groupId, studentId },

@@ -27,4 +27,10 @@ export class FindAllTeachersDto {
   @Type(() => Number)
   @IsInt()
   courseId?: number;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  branchId?: number;
 }

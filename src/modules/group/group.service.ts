@@ -49,13 +49,14 @@ export class GroupsService {
     };
   }
 
-  async getAllGroup(currentUser?: { branchId?: number }) {
+  async getAllGroup(currentUser?: { branchId?: number }, queryBranchId?: number) {
+    const targetBranchId = currentUser?.branchId || queryBranchId;
+
     const groups = await this.prisma.group.findMany({
       where: {
         status: { not: 'DELETED' as const },
-        // ADMIN faqat o'z filialini ko'radi
-        ...(currentUser?.branchId && {
-          branchId: currentUser.branchId,
+        ...(targetBranchId && {
+          branchId: targetBranchId,
         }),
       },
       include: {
@@ -78,7 +79,7 @@ export class GroupsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUser?: { branchId?: number }) {
     const group = await this.prisma.group.findUnique({
       where: { id },
       include: {
@@ -112,6 +113,10 @@ export class GroupsService {
     if (!group) {
       throw new NotFoundException(`Guruh topilmadi: ${id}`);
     }
+    
+    if (currentUser?.branchId && group.branchId !== currentUser.branchId) {
+      throw new NotFoundException(`Guruh topilmadi: ${id}`);
+    }
 
     return {
       success: true,
@@ -143,12 +148,16 @@ export class GroupsService {
     };
   }
 
-  async getStudents(id: number, query: PaginationSearchDto) {
+  async getStudents(id: number, query: PaginationSearchDto, currentUser?: { branchId?: number }) {
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
     const group = await this.prisma.group.findUnique({ where: { id } });
     if (!group) {
+      throw new NotFoundException(`Guruh topilmadi: ${id}`);
+    }
+
+    if (currentUser?.branchId && group.branchId !== currentUser.branchId) {
       throw new NotFoundException(`Guruh topilmadi: ${id}`);
     }
 
@@ -203,12 +212,16 @@ export class GroupsService {
     };
   }
 
-  async getLessons(id: number, query: PaginationSearchDto) {
+  async getLessons(id: number, query: PaginationSearchDto, currentUser?: { branchId?: number }) {
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
     const group = await this.prisma.group.findUnique({ where: { id } });
     if (!group) {
+      throw new NotFoundException(`Guruh topilmadi: ${id}`);
+    }
+
+    if (currentUser?.branchId && group.branchId !== currentUser.branchId) {
       throw new NotFoundException(`Guruh topilmadi: ${id}`);
     }
 
@@ -277,7 +290,7 @@ export class GroupsService {
     };
   }
 
-  async getSchedule(id: number) {
+  async getSchedule(id: number, currentUser?: { branchId?: number }) {
     const group = await this.prisma.group.findUnique({
       where: { id },
       include: {
@@ -303,6 +316,10 @@ export class GroupsService {
     });
 
     if (!group) {
+      throw new NotFoundException(`Guruh topilmadi: ${id}`);
+    }
+
+    if (currentUser?.branchId && group.branchId !== currentUser.branchId) {
       throw new NotFoundException(`Guruh topilmadi: ${id}`);
     }
 
@@ -378,7 +395,7 @@ export class GroupsService {
     };
   }
 
-  async getAttendanceDays(id: number, month: number, year?: number) {
+  async getAttendanceDays(id: number, month: number, currentUser?: { branchId?: number }, year?: number) {
     const group = await this.prisma.group.findUnique({
       where: { id },
       include: {
@@ -404,6 +421,10 @@ export class GroupsService {
     });
 
     if (!group) {
+      throw new NotFoundException(`Guruh topilmadi: ${id}`);
+    }
+
+    if (currentUser?.branchId && group.branchId !== currentUser.branchId) {
       throw new NotFoundException(`Guruh topilmadi: ${id}`);
     }
 

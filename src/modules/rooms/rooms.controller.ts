@@ -66,6 +66,7 @@ export class RoomsController {
     enum: ['ACTIVE', 'INACTIVE'],
     example: 'ACTIVE',
   })
+  @ApiQuery({ name: 'branchId', required: false, type: Number, example: 1 })
   findAll(@Query() query: FindAllRoomsDto, @Req() req: RequestWithUser) {
     return this.roomsService.findAll(query, req.user);
   }
@@ -79,8 +80,8 @@ export class RoomsController {
       '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.roomsService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.roomsService.findOne(id, req.user);
   }
 
   @Patch(':id')

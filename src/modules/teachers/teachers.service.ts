@@ -78,18 +78,16 @@ export class TeachersService {
     };
   }
 
-  async findAll(
-    query: FindAllTeachersDto,
-    currentUser?: { branchId?: number; role: Role },
-  ) {
-    const { page = 1, limit = 10, search } = query;
+  async findAll(query: FindAllTeachersDto, currentUser?: { branchId?: number }) {
+    const { page = 1, limit = 10, search, courseId, branchId } = query;
     const skip = (page - 1) * limit;
 
+    const targetBranchId = currentUser?.branchId || branchId;
+
     const where: Prisma.TeacherWhereInput = {
-      status: { not: 'DELETED' as const },
-      // ADMIN faqat o'z filialini ko'radi
-      ...(currentUser?.branchId && {
-        branchId: currentUser.branchId,
+      status: { not: 'DELETED' },
+      ...(targetBranchId && {
+        branchId: targetBranchId,
       }),
       ...(search && {
         OR: [
@@ -128,13 +126,14 @@ export class TeachersService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUser?: { branchId?: number }) {
     const baseUrl = process.env.APP_URL ?? 'http://localhost:4000';
 
     const teacher = await this.prisma.teacher.findUnique({
       where: { id },
       select: {
         ...SELECT_TEACHER,
+        branchId: true,
         groups: {
           select: {
             id: true,
@@ -158,6 +157,10 @@ export class TeachersService {
     });
 
     if (!teacher) {
+      throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
+    }
+
+    if (currentUser?.branchId && teacher.branchId !== currentUser.branchId) {
       throw new NotFoundException(`ID: ${id} bo'yicha o'qituvchi topilmadi`);
     }
 
@@ -334,8 +337,8 @@ export class TeachersService {
     };
   }
 
-  async getGroups(id: number) {
-    await this.findOne(id);
+  async getGroups(id: number, currentUser?: { branchId?: number }) {
+    await this.findOne(id, currentUser);
 
     return this.prisma.group.findMany({
       where: { teacherId: id },

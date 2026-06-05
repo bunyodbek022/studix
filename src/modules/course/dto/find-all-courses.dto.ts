@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Status } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class FindAllCoursesDto {
   @ApiPropertyOptional({ example: 1 })
@@ -27,4 +27,10 @@ export class FindAllCoursesDto {
   @IsOptional()
   @IsEnum(Status)
   status?: Status;
+
+  @ApiProperty({ example: 1, required: true })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  branchId: number;
 }
