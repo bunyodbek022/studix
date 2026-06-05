@@ -164,6 +164,97 @@ export class StudentsService {
     };
   }
 
+  async getMyGroupsPaginated(
+    id: number,
+    query: { page?: string; limit?: string; search?: string; tab?: string; courseId?: string },
+  ) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const whereCondition: any = { studentId: id };
+
+    // tab filtering
+    if (query.tab === 'arxiv') {
+      whereCondition.status = { in: ['INACTIVE', 'DELETED'] };
+    } else {
+      whereCondition.status = { in: ['ACTIVE', 'FREEZE'] };
+    }
+
+    // course filter
+    if (query.courseId && query.courseId !== 'all') {
+      whereCondition.group = {
+        ...whereCondition.group,
+        courseId: Number(query.courseId),
+      };
+    }
+
+    // search filter
+    if (query.search) {
+      whereCondition.group = {
+        ...whereCondition.group,
+        OR: [
+          { name: { contains: query.search, mode: 'insensitive' } },
+          { course: { name: { contains: query.search, mode: 'insensitive' } } },
+          { teacher: { fullName: { contains: query.search, mode: 'insensitive' } } },
+          { room: { name: { contains: query.search, mode: 'insensitive' } } },
+        ],
+      };
+    }
+
+    const [total, studentGroups] = await Promise.all([
+      this.prisma.studentGroup.count({ where: whereCondition }),
+      this.prisma.studentGroup.findMany({
+        where: whereCondition,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          status: true,
+          group: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+              startDate: true,
+              startTime: true,
+              weekDays: true,
+              course: { select: { id: true, name: true, level: true } },
+              teacher: { select: { id: true, fullName: true } },
+              room: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      }),
+    ]);
+
+    // calculate totals for tabs (active vs archive) without search/course filters
+    const [activeTotal, archiveTotal] = await Promise.all([
+      this.prisma.studentGroup.count({
+        where: { studentId: id, status: { in: ['ACTIVE', 'FREEZE'] } },
+      }),
+      this.prisma.studentGroup.count({
+        where: { studentId: id, status: { in: ['INACTIVE', 'DELETED'] } },
+      }),
+    ]);
+
+    return {
+      success: true,
+      data: studentGroups,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        activeTotal,
+        archiveTotal,
+      },
+    };
+  }
+
   async getGroupSummary(studentId: number) {
     const studentGroups = await this.prisma.studentGroup.findMany({
       where: {
@@ -225,6 +316,38 @@ export class StudentsService {
     });
 
     return { success: true, data };
+  }
+
+  async getMyAttendanceHistory(studentId: number, groupId: number) {
+    const studentGroup = await this.prisma.studentGroup.findUnique({
+      where: {
+        groupId_studentId: { groupId, studentId },
+      },
+    });
+
+    if (!studentGroup) {
+      throw new NotFoundException(
+        `Student ${studentId} does not belong to group ${groupId}`,
+      );
+    }
+
+    const attendances = await this.prisma.attendance.findMany({
+      where: {
+        studentId,
+        lesson: { groupId },
+      },
+      include: {
+        lesson: true,
+      },
+      orderBy: {
+        created_at: 'asc',
+      },
+    });
+
+    return {
+      success: true,
+      data: attendances,
+    };
   }
 
   async getAttendanceDetails(studentId: number, groupId: number) {

@@ -7,6 +7,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Query,
     Req,
     UploadedFile,
     UseGuards,
@@ -128,6 +129,20 @@ export class StudentsController {
         return this.studentsService.getGroupSummary(id);
     }
 
+    @Get('my/groups')
+    @Roles(Role.STUDENT)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "Studentning o'z guruhlari",
+        description: "Student o'zi a'zo bo'lgan guruhlarni ko'rishi uchun.",
+    })
+    getMyGroups(
+        @Req() req: RequestWithUser,
+        @Query() query: { page?: string; limit?: string; search?: string; tab?: string; courseId?: string },
+    ) {
+        return this.studentsService.getMyGroupsPaginated(req.user.id, query);
+    }
+
     @Get(':id/groups')
     @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @UseGuards(AuthGuard, RolesGuard)
@@ -139,6 +154,21 @@ export class StudentsController {
     })
     getGroups(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.getGroups(id);
+    }
+
+    @Get('my/groups/:groupId/attendance')
+    @Roles(Role.STUDENT)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "Studentning o'z guruhidagi davomati",
+        description: "Student o'zining qoldirgan darslari ro'yxatini ko'rishi uchun.",
+    })
+    @ApiParam({ name: 'groupId', type: Number, example: 2 })
+    async getMyAttendanceDetails(
+        @Req() req: RequestWithUser,
+        @Param('groupId', ParseIntPipe) groupId: number,
+    ) {
+        return this.studentsService.getMyAttendanceHistory(req.user.id, groupId);
     }
 
     @Get(':studentId/groups/:groupId/attendance-details')
