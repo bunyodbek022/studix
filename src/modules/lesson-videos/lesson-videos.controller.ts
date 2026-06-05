@@ -1,4 +1,3 @@
-import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import {
   Body,
   Controller,
@@ -27,6 +26,7 @@ import { Roles } from 'src/common/decorators/role.decorator';
 import { CreateLessonVideoDto } from './dto/create-lesson-video.dto';
 import { LessonVideosService } from './lesson-videos.service';
 import { multerVideoConfig } from 'src/common/config/multer-video.config';
+import type{ RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 
 @ApiTags('Lesson Videos')
 @Controller('lesson-videos')

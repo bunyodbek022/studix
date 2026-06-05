@@ -1,4 +1,3 @@
-import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import {
   Body,
   Controller,
@@ -28,6 +27,7 @@ import { Role } from '@prisma/client';
 import { CreateStudentGroupDto } from './dto/create-student-group.dto';
 import { UpdateStudentGroupDto } from './dto/update-student-group.dto';
 import { FindAllStudentGroupDto } from './dto/find-all-student-group.dto';
+import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 
 @ApiTags('Student Groups')
 @Controller('student-groups')

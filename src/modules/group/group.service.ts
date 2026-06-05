@@ -6,14 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { Status, Role } from '@prisma/client';
+import { Prisma, Role, Status } from '@prisma/client';
 import PrismaService from 'src/prisma/prisma.service';
 import { PaginationSearchDto } from './dto/pagination-search.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Injectable()
 export class GroupsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getGroupLessons(
     groupId: number,

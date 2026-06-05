@@ -1,28 +1,27 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Req,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Req,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import {
-  ApiBody,
-  ApiConsumes,
-  ApiCookieAuth,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
+    ApiBody,
+    ApiConsumes,
+    ApiCookieAuth,
+    ApiOperation,
+    ApiParam,
+    ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
-import { Request } from 'express';
 import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 
 import { StudentsService } from './students.service';
@@ -43,240 +42,240 @@ import { multerConfig } from 'src/common/config/multer.config';
 @UseGuards(AuthGuard, RolesGuard)
 @ApiCookieAuth('access_token')
 export class StudentsController {
-  constructor(private readonly studentsService: StudentsService) {}
+    constructor(private readonly studentsService: StudentsService) { }
 
-  @Post()
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @RequirePermission(Label.STUDENTS, RoleActions.CREATE)
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @ApiOperation({
-    summary: "Yangi o'quvchi qo'shish",
-    description:
-      "Yangi talaba (o'quvchi) yaratadi va tizimga qo'shadi. Rasm yuklash (photo) va branchId yozish imkoniyati bor.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
-      '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `CREATE`',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['fullName', 'email', 'password', 'birth_date'],
-      properties: {
-        fullName: { type: 'string', example: 'Dilnoza Yusupova' },
-        email: { type: 'string', example: 'dilnoza@example.com' },
-        password: { type: 'string', example: 'secret123' },
-        birth_date: { type: 'string', example: '2000-05-20' },
-        photo: { type: 'string', format: 'binary', nullable: true },
-        branchId: { type: 'number', example: 1 },
-      },
-    },
-  })
-  @UseInterceptors(FileInterceptor('photo', multerConfig))
-  create(
-    @Body() dto: CreateStudentDto,
-    @Req() req: RequestWithUser,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    return this.studentsService.create(dto, file, req.user);
-  }
+    @Post()
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.CREATE)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "Yangi o'quvchi qo'shish",
+        description:
+            "Yangi talaba (o'quvchi) yaratadi va tizimga qo'shadi. Rasm yuklash (photo) va branchId yozish imkoniyati bor.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
+            '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `CREATE`',
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['fullName', 'email', 'password', 'birth_date'],
+            properties: {
+                fullName: { type: 'string', example: 'Dilnoza Yusupova' },
+                email: { type: 'string', example: 'dilnoza@example.com' },
+                password: { type: 'string', example: 'secret123' },
+                birth_date: { type: 'string', example: '2000-05-20' },
+                photo: { type: 'string', format: 'binary', nullable: true },
+                branchId: { type: 'number', example: 1 },
+            },
+        },
+    })
+    @UseInterceptors(FileInterceptor('photo', multerConfig))
+    create(
+        @Body() dto: CreateStudentDto,
+        @Req() req: RequestWithUser,
+        @UploadedFile() file?: Express.Multer.File,
+    ) {
+        return this.studentsService.create(dto, file, req.user);
+    }
 
-  @Get()
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @RequirePermission(Label.STUDENTS, RoleActions.READ)
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @ApiOperation({
-    summary: "Barcha o'quvchilarni ko'rish",
-    description:
-      "Tizimdagi barcha faol o'quvchilar ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
-      '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
-  })
-  findAll(@Req() req: RequestWithUser) {
-    return this.studentsService.findAll(req.user);
-  }
+    @Get()
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.READ)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "Barcha o'quvchilarni ko'rish",
+        description:
+            "Tizimdagi barcha faol o'quvchilar ro'yxatini qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
+            '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
+    })
+    findAll(@Req() req: RequestWithUser) {
+        return this.studentsService.findAll(req.user);
+    }
 
-  @Get(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @RequirePermission(Label.STUDENTS, RoleActions.READ)
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @ApiOperation({
-    summary: "O'quvchini ID bo'yicha ko'rish",
-    description:
-      "O'quvchining shaxsiy ma'lumotlarini va u a'zo bo'lgan guruhlarni uning ID raqami orqali qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
-      '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
-  })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.findOne(id);
-  }
+    @Get(':id')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @RequirePermission(Label.STUDENTS, RoleActions.READ)
+    @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+    @ApiOperation({
+        summary: "O'quvchini ID bo'yicha ko'rish",
+        description:
+            "O'quvchining shaxsiy ma'lumotlarini va u a'zo bo'lgan guruhlarni uning ID raqami orqali qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`\n' +
+            '**Ruxsatlar (Permissions):** Label: `STUDENTS`, Action: `READ`',
+    })
+    findOne(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.findOne(id);
+    }
 
-  @Get(':id/group-summary')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({
-    summary: "O'quvchining guruhlardagi umumiy faoliyati",
-    description:
-      "O'quvchining detail sahifasidagi guruhlar jadvali uchun har bir guruh bo'yicha fan, o'qituvchi, davomat foizi, vazifalar (homework) va darslar sonini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    description: 'Student ID',
-    example: 1,
-  })
-  async getGroupSummary(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.getGroupSummary(id);
-  }
+    @Get(':id/group-summary')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "O'quvchining guruhlardagi umumiy faoliyati",
+        description:
+            "O'quvchining detail sahifasidagi guruhlar jadvali uchun har bir guruh bo'yicha fan, o'qituvchi, davomat foizi, vazifalar (homework) va darslar sonini qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({
+        name: 'id',
+        type: Number,
+        description: 'Student ID',
+        example: 1,
+    })
+    async getGroupSummary(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.getGroupSummary(id);
+    }
 
-  @Get(':id/groups')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({
-    summary: "O'quvchi a'zo bo'lgan guruhlar",
-    description:
-      "Berilgan o'quvchi biriktirilgan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  getGroups(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.getGroups(id);
-  }
+    @Get(':id/groups')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "O'quvchi a'zo bo'lgan guruhlar",
+        description:
+            "Berilgan o'quvchi biriktirilgan barcha guruhlar ro'yxatini qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    getGroups(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.getGroups(id);
+    }
 
-  @Get(':studentId/groups/:groupId/attendance-details')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: "O'quvchi davomat detallari",
-    description:
-      "Berilgan guruh bo'yicha o'quvchining qoldirgan darslari va sababli/sababsiz davomat ma'lumotlari ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'studentId', type: Number, example: 12 })
-  @ApiParam({ name: 'groupId', type: Number, example: 2 })
-  async getAttendanceDetails(
-    @Param('studentId', ParseIntPipe) studentId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-  ) {
-    return this.studentsService.getAttendanceDetails(studentId, groupId);
-  }
+    @Get(':studentId/groups/:groupId/attendance-details')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'quvchi davomat detallari",
+        description:
+            "Berilgan guruh bo'yicha o'quvchining qoldirgan darslari va sababli/sababsiz davomat ma'lumotlari ro'yxatini qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'studentId', type: Number, example: 12 })
+    @ApiParam({ name: 'groupId', type: Number, example: 2 })
+    async getAttendanceDetails(
+        @Param('studentId', ParseIntPipe) studentId: number,
+        @Param('groupId', ParseIntPipe) groupId: number,
+    ) {
+        return this.studentsService.getAttendanceDetails(studentId, groupId);
+    }
 
-  @Get(':studentId/groups/:groupId/homeworks')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: "O'quvchining vazifalar (homework) ro'yxati",
-    description:
-      "Berilgan guruh bo'yicha o'quvchining barcha uy vazifalari, topshiriq topshirganlik holati va baholari/natijalari ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'studentId', type: Number, example: 12 })
-  @ApiParam({ name: 'groupId', type: Number, example: 2 })
-  async getHomeworks(
-    @Param('studentId', ParseIntPipe) studentId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-  ) {
-    return this.studentsService.getHomeworks(studentId, groupId);
-  }
+    @Get(':studentId/groups/:groupId/homeworks')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "O'quvchining vazifalar (homework) ro'yxati",
+        description:
+            "Berilgan guruh bo'yicha o'quvchining barcha uy vazifalari, topshiriq topshirganlik holati va baholari/natijalari ro'yxatini qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'studentId', type: Number, example: 12 })
+    @ApiParam({ name: 'groupId', type: Number, example: 2 })
+    async getHomeworks(
+        @Param('studentId', ParseIntPipe) studentId: number,
+        @Param('groupId', ParseIntPipe) groupId: number,
+    ) {
+        return this.studentsService.getHomeworks(studentId, groupId);
+    }
 
-  @Patch(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({
-    summary: "O'quvchi ma'lumotlarini yangilash",
-    description:
-      "O'quvchining shaxsiy ma'lumotlarini (ismi, emaili, paroli, tug'ilgan kuni, rasmi) yangilaydi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        fullName: { type: 'string', example: 'Dilnoza Yusupova' },
-        email: { type: 'string', example: 'dilnoza@example.com' },
-        password: { type: 'string', example: 'secret123' },
-        birth_date: { type: 'string', example: '2000-05-20' },
-        photo: { type: 'string', format: 'binary', nullable: true },
-      },
-    },
-  })
-  @UseInterceptors(FileInterceptor('photo', multerConfig))
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateStudentDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    return this.studentsService.update(id, dto, file);
-  }
+    @Patch(':id')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "O'quvchi ma'lumotlarini yangilash",
+        description:
+            "O'quvchining shaxsiy ma'lumotlarini (ismi, emaili, paroli, tug'ilgan kuni, rasmi) yangilaydi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                fullName: { type: 'string', example: 'Dilnoza Yusupova' },
+                email: { type: 'string', example: 'dilnoza@example.com' },
+                password: { type: 'string', example: 'secret123' },
+                birth_date: { type: 'string', example: '2000-05-20' },
+                photo: { type: 'string', format: 'binary', nullable: true },
+            },
+        },
+    })
+    @UseInterceptors(FileInterceptor('photo', multerConfig))
+    update(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UpdateStudentDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ) {
+        return this.studentsService.update(id, dto, file);
+    }
 
-  @Patch(':id/archive')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: "Studentni arxivga o'tkazish",
-    description:
-      "O'quvchini arxiv (INACTIVE) holatiga o'tkazadi va uning guruhlardagi statusini ham INACTIVE qiladi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'id', type: Number, example: 1 })
-  archive(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.archive(id);
-  }
+    @Patch(':id/archive')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni arxivga o'tkazish",
+        description:
+            "O'quvchini arxiv (INACTIVE) holatiga o'tkazadi va uning guruhlardagi statusini ham INACTIVE qiladi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    archive(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.archive(id);
+    }
 
-  @Patch(':id/restore')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: 'Studentni arxivdan qayta faollashtirish',
-    description:
-      "Arxivlangan o'quvchini faol (ACTIVE) holatga qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'id', type: Number, example: 1 })
-  restore(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.restore(id);
-  }
+    @Patch(':id/restore')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: 'Studentni arxivdan qayta faollashtirish',
+        description:
+            "Arxivlangan o'quvchini faol (ACTIVE) holatga qaytaradi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    restore(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.restore(id);
+    }
 
-  @Patch(':id/freeze')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: 'Studentni freeze qilish (barcha guruhlarida)',
-    description:
-      "Studentni FREEZE holatiga o'tkazadi. Studentning o'z statusi va u a'zo bo'lgan barcha ACTIVE guruhlardagi statusi FREEZE bo'ladi.\n\n" +
-      '**Muhim:** Freeze tugash sanasi (`freezeEndDate`) kelganda tizim avtomatik student va guruhlarni ACTIVE ga qaytaradi.\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
-  @ApiBody({ type: FreezeStudentDto })
-  freeze(@Param('id', ParseIntPipe) id: number, @Body() dto: FreezeStudentDto) {
-    return this.studentsService.freezeStudent(id, dto);
-  }
+    @Patch(':id/freeze')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: 'Studentni freeze qilish (barcha guruhlarida)',
+        description:
+            "Studentni FREEZE holatiga o'tkazadi. Studentning o'z statusi va u a'zo bo'lgan barcha ACTIVE guruhlardagi statusi FREEZE bo'ladi.\n\n" +
+            '**Muhim:** Freeze tugash sanasi (`freezeEndDate`) kelganda tizim avtomatik student va guruhlarni ACTIVE ga qaytaradi.\n\n' +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
+    @ApiBody({ type: FreezeStudentDto })
+    freeze(@Param('id', ParseIntPipe) id: number, @Body() dto: FreezeStudentDto) {
+        return this.studentsService.freezeStudent(id, dto);
+    }
 
-  @Patch(':id/unfreeze')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: 'Studentni freeze dan chiqarish',
-    description:
-      "FREEZE holatidagi studentni ACTIVE ga qaytaradi. Barcha freeze guruhlaridagi statusi ham ACTIVE bo'ladi.\n\n" +
-      "**Erta chiqarish:** `unfrozenAt` sanasi berilsa, o'sha sana saqlanadi. Berilmasa bugungi sana ishlatiladi. " +
-      "Freeze boshlangandan `unfrozenAt` gacha bo'lgan davrda attendance kiritish imkoni qoladi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
-  @ApiBody({ type: UnfreezeStudentDto })
-  unfreeze(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UnfreezeStudentDto,
-  ) {
-    return this.studentsService.unfreezeStudent(id, dto);
-  }
+    @Patch(':id/unfreeze')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: 'Studentni freeze dan chiqarish',
+        description:
+            "FREEZE holatidagi studentni ACTIVE ga qaytaradi. Barcha freeze guruhlaridagi statusi ham ACTIVE bo'ladi.\n\n" +
+            "**Erta chiqarish:** `unfrozenAt` sanasi berilsa, o'sha sana saqlanadi. Berilmasa bugungi sana ishlatiladi. " +
+            "Freeze boshlangandan `unfrozenAt` gacha bo'lgan davrda attendance kiritish imkoni qoladi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1, description: 'Student ID' })
+    @ApiBody({ type: UnfreezeStudentDto })
+    unfreeze(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UnfreezeStudentDto,
+    ) {
+        return this.studentsService.unfreezeStudent(id, dto);
+    }
 
-  @Delete(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
-  @ApiOperation({
-    summary: "Studentni butunlay o'chirish (DELETED)",
-    description:
-      "O'quvchini tizimdan butunlay o'chirmaydi, balki statusini DELETED holatiga o'tkazib qo'yadi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
-  })
-  @ApiParam({ name: 'id', type: Number, example: 1 })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.remove(id);
-  }
+    @Delete(':id')
+    @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+    @ApiOperation({
+        summary: "Studentni butunlay o'chirish (DELETED)",
+        description:
+            "O'quvchini tizimdan butunlay o'chirmaydi, balki statusini DELETED holatiga o'tkazib qo'yadi.\n\n" +
+            '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+    })
+    @ApiParam({ name: 'id', type: Number, example: 1 })
+    remove(@Param('id', ParseIntPipe) id: number) {
+        return this.studentsService.remove(id);
+    }
 }
