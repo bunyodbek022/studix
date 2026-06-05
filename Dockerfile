@@ -10,7 +10,7 @@ COPY prisma ./prisma/
 
 # Install pnpm and app dependencies
 RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile
 
 # Copy app source code
 COPY . .
@@ -33,7 +33,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-
+COPY --from=builder /app/prisma.config.ts ./
 # Create uploads directory with proper permissions
 RUN mkdir -p uploads/videos && chown -R node:node uploads
 
@@ -44,4 +44,4 @@ USER node
 EXPOSE 3000
 
 # Start server and run migrations
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
