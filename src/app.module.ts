@@ -17,6 +17,9 @@ import { LabelsModule } from './modules/labels/labels.module';
 import { CentersModule } from './modules/centers/centers.module';
 import { BranchesModule } from './modules/branches/branches.module';
 import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
+import { ReasonsModule } from './modules/reasons/reasons.module';
+import { GiftsModule } from './modules/gifts/gifts.module';
+import { XpTransactionsModule } from './modules/xp-transactions/xp-transactions.module';
 
 @Module({
   imports: [
@@ -60,6 +63,9 @@ import { RolePermissionsModule } from './modules/role-permissions/role-permissio
     CentersModule,
     BranchesModule,
     RolePermissionsModule,
+    ReasonsModule,
+    GiftsModule,
+    XpTransactionsModule,
   ],
   controllers: [],
   providers: [UserSeeder],

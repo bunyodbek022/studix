@@ -51,7 +51,7 @@ export class LessonsService {
   async saveAttendance(
     lessonId: number,
     dto: SaveAttendanceDto,
-    currentUser: { id: number },
+    currentUser: { id: number, role: Role },
   ) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
@@ -61,6 +61,15 @@ export class LessonsService {
     if (!lesson) {
       throw new NotFoundException(`Dars topilmadi: ${lessonId}`);
     }
+
+    // Get center settings for XP
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: lesson.branchId },
+      include: { center: true },
+    });
+    const attendanceXp = branch?.center.attendanceXp || 0;
+    const ratio = branch?.center.xpToCoinRatio || 1;
+    const attendanceCoins = attendanceXp * ratio;
 
     // Guruhda o'qiyotgan studentlar
     const studentGroups = await this.prisma.studentGroup.findMany({
@@ -82,12 +91,18 @@ export class LessonsService {
       );
     }
 
-    // Upsert — bor bo'lsa update, yo'q bo'lsa create
-    await this.prisma.$transaction(
-      dto.items.map((item) =>
-        this.prisma.attendance.upsert({
+    // Old attendances
+    const oldAttendances = await this.prisma.attendance.findMany({
+      where: { lessonId },
+    });
+    const oldState = new Map(oldAttendances.map(a => [a.studentId, a.isPresent]));
+
+    // Transaction to save attendance and update XP
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of dto.items) {
+        // Upsert attendance
+        await tx.attendance.upsert({
           where: {
-            // Unique constraint kerak — schema ga qo'shamiz
             lessonId_studentId: {
               lessonId,
               studentId: item.studentId,
@@ -104,13 +119,54 @@ export class LessonsService {
             userId: currentUser.id,
             branchId: lesson.branchId,
           },
-        }),
-      ),
-    );
+        });
+
+        // XP logic
+        const wasPresent = oldState.get(item.studentId);
+        const isPresentNow = item.isPresent;
+
+        if (attendanceXp > 0) {
+          let xpChange = 0;
+          let coinChange = 0;
+
+          if (isPresentNow && !wasPresent) {
+            // Became present
+            xpChange = attendanceXp;
+            coinChange = attendanceCoins;
+          } else if (!isPresentNow && wasPresent) {
+            // Became absent (undo XP)
+            xpChange = -attendanceXp;
+            coinChange = -attendanceCoins;
+          }
+
+          if (xpChange !== 0) {
+            await tx.xpTransaction.create({
+              data: {
+                branchId: lesson.branchId,
+                amountXp: xpChange,
+                amountCoin: coinChange,
+                sourceRole: currentUser.role,
+                sourceId: currentUser.id,
+                studentId: item.studentId,
+                description: `Dars davomati uchun (${xpChange > 0 ? 'Kirdi' : 'Chiqdi'})`,
+              },
+            });
+
+            await tx.student.update({
+              where: { id: item.studentId },
+              data: {
+                xp: { increment: xpChange },
+                coins: { increment: coinChange },
+              },
+            });
+          }
+        }
+      }
+    });
 
     return {
       success: true,
-      message: 'Davomat saqlandi',
+      message: 'Davomat saqlandi va XP hisoblandi',
     };
   }
 

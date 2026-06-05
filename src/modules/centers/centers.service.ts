@@ -112,10 +112,19 @@ export class CentersService {
   }
 
   update(id: number, updateCenterDto: UpdateCenterDto) {
-    const data: { name?: string } = {};
+    const data: any = {};
 
     if (updateCenterDto.centerName !== undefined) {
       data.name = updateCenterDto.centerName;
+    }
+    if (updateCenterDto.xpToCoinRatio !== undefined) {
+      data.xpToCoinRatio = updateCenterDto.xpToCoinRatio;
+    }
+    if (updateCenterDto.attendanceXp !== undefined) {
+      data.attendanceXp = updateCenterDto.attendanceXp;
+    }
+    if (updateCenterDto.maxHomeworkXp !== undefined) {
+      data.maxHomeworkXp = updateCenterDto.maxHomeworkXp;
     }
 
     return this.prisma.center.update({
