@@ -83,4 +83,26 @@ export const LABEL_DEFINITIONS = [
     order: 11,
     roles: [Role.STUDENT],
   },
+  {
+    key: 'leads',
+    title: 'Leads',
+    path: '/leads',
+    order: 12,
+    roles: STAFF_ROLES,
+  },
+  {
+    key: 'finance',
+    title: 'Finance',
+    path: '/finance',
+    order: 13,
+    roles: STAFF_ROLES,
+  },
+  {
+    key: 'management',
+    title: 'Management',
+    path: '/management',
+    order: 14,
+    roles: STAFF_ROLES,
+  },
+
 ] as const satisfies readonly LabelDefinition[];

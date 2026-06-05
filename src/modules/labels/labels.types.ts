@@ -12,7 +12,10 @@ export type LabelKey =
   | 'profile'
   | 'rating-gifts'
   | 'rating'
-  | 'gifts';
+  | 'gifts'
+  | 'leads'
+  | 'finance'
+  | 'management';
 
 export type LabelTitle =
   | 'Dashboard'
@@ -25,7 +28,10 @@ export type LabelTitle =
   | 'To\'lovlar'
   | 'Ma\'lumotlarim'
   | 'Rating'
-  | 'Gifts';
+  | 'Gifts'
+  | 'Leads'
+  | 'Finance'
+  | 'Management';
 
 export interface LabelDefinition {
   key: LabelKey;
