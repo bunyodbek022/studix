@@ -27,6 +27,7 @@ async function bootstrap() {
         'http://localhost:4000',
         'https://studix-jo89.vercel.app',
         'https://studix-frontend.vercel.app',
+        'https://studix.bunyodbek.me',
       ];
 
       // Vercel preview URL'larini ham ruxsat berish
