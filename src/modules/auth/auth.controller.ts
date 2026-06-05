@@ -37,6 +37,8 @@ export class AuthController {
     res.cookie('access_token', result.token, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'none', // Cross-site (turli domen) uchun shart
+      secure: true,     // sameSite: 'none' uchun secure: true shart (HTTPS)
     });
 
     console.log(result.role);
@@ -60,6 +62,8 @@ export class AuthController {
         res.clearCookie('access_token', {
             httpOnly: true,
             path: '/',
+            sameSite: 'none',
+            secure: true,
         });
         return res.json({
             success: true,
