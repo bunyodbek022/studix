@@ -20,6 +20,10 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: '+998901234567' })
+  @IsString()
+  phone: string;
+
   @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
   @IsString()

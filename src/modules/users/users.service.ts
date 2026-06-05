@@ -15,6 +15,7 @@ const SELECT_USER = {
   id: true,
   fullName: true,
   email: true,
+  phone: true,
   position: true,
   role: true,
   status: true,
@@ -59,6 +60,7 @@ export class UsersService {
       data: {
         fullName: dto.fullName,
         email: dto.email,
+        phone: dto.phone,
         position: dto.position,
         hire_date: new Date(dto.hire_date),
         role: dto.role,

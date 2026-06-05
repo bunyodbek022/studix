@@ -16,6 +16,7 @@ const SELECT_STUDENT = {
   id: true,
   fullName: true,
   email: true,
+  phone: true,
   photo: true,
   birth_date: true,
   status: true,
@@ -60,6 +61,7 @@ export class StudentsService {
       data: {
         fullName: dto.fullName,
         email: dto.email,
+        phone: dto.phone,
         birth_date: new Date(dto.birth_date),
         password: hashedPassword,
         photo: this.buildPhotoUrl(file?.filename),
@@ -342,6 +344,7 @@ export class StudentsService {
 
     if (dto.fullName !== undefined) data.fullName = dto.fullName;
     if (dto.email !== undefined) data.email = dto.email;
+    if (dto.phone !== undefined) data.phone = dto.phone;
     if (dto.birth_date !== undefined) {
       data.birth_date = new Date(dto.birth_date);
     }

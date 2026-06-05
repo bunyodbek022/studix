@@ -38,10 +38,9 @@ export class CreateTeacherDto {
   @Min(0)
   experience: number;
 
-  @ApiPropertyOptional({ example: '+998901234567' })
-  @IsOptional()
+  @ApiProperty({ example: '+998901234567' })
   @IsString()
-  phone?: string;
+  phone: string;
 
   @ApiPropertyOptional({ example: '1990-01-01' })
   @IsOptional()

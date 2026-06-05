@@ -17,8 +17,15 @@ export class AuthService {
   ) {}
 
   async loginStudent(data: loginUserDto) {
+    if (!data.email && !data.phone) throw new BadRequestException('Email or phone is required');
+    
     const studentExist = await this.prisma.student.findFirst({
-      where: { email: data.email },
+      where: {
+        OR: [
+          ...(data.email ? [{ email: data.email }] : []),
+          ...(data.phone ? [{ phone: data.phone }] : []),
+        ],
+      },
     });
     if (!studentExist) {
       throw new NotFoundException('Student not found');
@@ -43,8 +50,15 @@ export class AuthService {
   }
 
   async loginUser(data: loginUserDto) {
+    if (!data.email && !data.phone) throw new BadRequestException('Email or phone is required');
+
     const userExist = await this.prisma.user.findFirst({
-      where: { email: data.email },
+      where: {
+        OR: [
+          ...(data.email ? [{ email: data.email }] : []),
+          ...(data.phone ? [{ phone: data.phone }] : []),
+        ],
+      },
     });
 
     if (!userExist) {
@@ -70,8 +84,15 @@ export class AuthService {
   }
 
   async loginTeacher(data: loginUserDto) {
+    if (!data.email && !data.phone) throw new BadRequestException('Email or phone is required');
+
     const teacherExist = await this.prisma.teacher.findFirst({
-      where: { email: data.email },
+      where: {
+        OR: [
+          ...(data.email ? [{ email: data.email }] : []),
+          ...(data.phone ? [{ phone: data.phone }] : []),
+        ],
+      },
     });
     if (!teacherExist) {
       throw new NotFoundException('teacher not found');
