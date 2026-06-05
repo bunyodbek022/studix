@@ -13,6 +13,12 @@ enum Status {
   DELETED
 }
 
+enum ReasonCategory {
+  ADD_XP
+  SUBTRACT_XP
+  FREEZE_STUDENT
+}
+
 enum UserStatus {
   ACTIVE
   INACTIVE
@@ -114,6 +120,10 @@ model Center {
   creatorId Int  @unique
   creator   User @relation("CenterCreator", fields: [creatorId], references: [id])
 
+  xpToCoinRatio Int @default(1)
+  attendanceXp  Int @default(0)
+  maxHomeworkXp Int @default(0)
+
   branches        Branch[]
   rolePermissions RolePermission[]
 }
@@ -147,6 +157,9 @@ model Branch {
   studentHistories  StudentHistory[]
   groupHistories    GroupHistory[]
   rolePermissions   RolePermission[]
+  reasons           Reason[]
+  gifts             Gift[]
+  xpTransactions    XpTransaction[]
 }
 
 model User {
@@ -162,6 +175,8 @@ model User {
   customRole String?
   hire_date  DateTime
   address    String?
+  coins      Int        @default(0)
+  xp         Int        @default(0)
   status     UserStatus @default(ACTIVE)
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
@@ -177,6 +192,8 @@ model User {
   teacherHistories TeacherHistory[]
   studentHistories StudentHistory[]
   groupHistories   GroupHistory[]
+  xpTransactions   XpTransaction[]
+  giftPurchases    GiftPurchase[]
 
   @@unique([email, branchId])
   @@unique([phone, branchId])
@@ -194,6 +211,8 @@ model Teacher {
   position   String
   experience Int
   addedBy    String?
+  coins      Int        @default(0)
+  xp         Int        @default(0)
   status     UserStatus @default(ACTIVE)
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
@@ -207,6 +226,8 @@ model Teacher {
   rating            Rating[]
   HomeworkResult    HomeworkResult[]
   teacherHistories  TeacherHistory[]
+  xpTransactions    XpTransaction[]
+  giftPurchases     GiftPurchase[]
 
   @@unique([email, branchId])
   @@unique([phone, branchId])
@@ -239,6 +260,8 @@ model Student {
   freezeStartDate DateTime?
   freezeEndDate   DateTime?
   unfrozenAt      DateTime?
+  coins           Int        @default(0)
+  xp              Int        @default(0)
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
 
@@ -248,6 +271,8 @@ model Student {
   HomeworkResult    HomeworkResult[]
   HomeworkResponse  HomeworkResponse[]
   studentHistories  StudentHistory[]
+  xpTransactions    XpTransaction[]
+  giftPurchases     GiftPurchase[]
 
   @@unique([email, branchId])
   @@unique([phone, branchId])
@@ -507,4 +532,69 @@ model RolePermission {
   center Center? @relation(fields: [centerId], references: [id])
 
   @@unique([branchId, name, category])
+}
+
+model Reason {
+  id         Int            @id @default(autoincrement())
+  branchId   Int
+  name       String
+  category   ReasonCategory
+  roles      Role[]
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  branch         Branch          @relation(fields: [branchId], references: [id])
+  xpTransactions XpTransaction[]
+}
+
+model Gift {
+  id           Int      @id @default(autoincrement())
+  branchId     Int
+  name         String
+  description  String?
+  priceInCoins Int
+  image        String?
+  stock        Int      @default(0)
+  status       Status   @default(ACTIVE)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  branch        Branch         @relation(fields: [branchId], references: [id])
+  giftPurchases GiftPurchase[]
+}
+
+model XpTransaction {
+  id          Int      @id @default(autoincrement())
+  branchId    Int
+  amountXp    Int
+  amountCoin  Int
+  sourceRole  Role
+  sourceId    Int
+  studentId   Int?
+  teacherId   Int?
+  userId      Int?
+  reasonId    Int?
+  description String?
+  created_at  DateTime @default(now())
+
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  reason  Reason?  @relation(fields: [reasonId], references: [id])
+  student Student? @relation(fields: [studentId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+}
+
+model GiftPurchase {
+  id           Int      @id @default(autoincrement())
+  giftId       Int
+  studentId    Int?
+  teacherId    Int?
+  userId       Int?
+  priceInCoins Int
+  created_at   DateTime @default(now())
+
+  gift    Gift     @relation(fields: [giftId], references: [id])
+  student Student? @relation(fields: [studentId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
 }
