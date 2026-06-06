@@ -29,7 +29,7 @@ export class StudentsService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
-  ) {}
+  ) { }
 
   private buildPhotoUrl(filename?: string) {
     if (!filename) return null;
@@ -70,7 +70,11 @@ export class StudentsService {
       select: SELECT_STUDENT,
     });
 
-    await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
+    try {
+      await this.mail.sendCredentials(dto.email, dto.fullName, dto.password);
+    } catch (error) {
+      console.error("Failed to send credentials email:", error);
+    }
 
     return {
       success: true,
