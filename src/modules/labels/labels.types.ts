@@ -15,7 +15,8 @@ export type LabelKey =
   | 'gifts'
   | 'leads'
   | 'finance'
-  | 'management';
+  | 'management'
+  | 'my-details';
 
 export type LabelTitle =
   | 'Dashboard'
@@ -31,7 +32,8 @@ export type LabelTitle =
   | 'Gifts'
   | 'Leads'
   | 'Finance'
-  | 'Management';
+  | 'Management'
+  | 'Ma\'lumotlarim';
 
 export interface LabelDefinition {
   key: LabelKey;

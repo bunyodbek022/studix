@@ -19,6 +19,7 @@ import {
     ApiCookieAuth,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -95,6 +96,69 @@ export class StudentsController {
         return this.studentsService.findAll(req.user);
     }
 
+    @Get('my/groups')
+    @Roles(Role.STUDENT)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "Studentning o'z guruhlari",
+        description: "Student o'zi a'zo bo'lgan guruhlarni ko'rishi uchun.",
+    })
+    getMyGroups(
+        @Req() req: RequestWithUser,
+        @Query() query: { page?: string; limit?: string; search?: string; tab?: string; courseId?: string },
+    ) {
+        return this.studentsService.getMyGroupsPaginated(req.user.id, query);
+    }
+
+    @Get('dashboard')
+    @Roles(Role.STUDENT)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "Student dashboard statistikasi",
+        description: "Studentning umumiy xp, coins, davomat va oxirgi faolliklarini qaytaradi.",
+    })
+    getStudentDashboard(@Req() req: RequestWithUser) {
+        return this.studentsService.getStudentDashboard(req.user);
+    }
+
+    @Get('group-calendar')
+    @Roles(Role.STUDENT)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: "Studentning ma'lum bir guruh uchun dars kalendari",
+        description: "Tanlangan guruhning oylik dars jadvalini qaytaradi.",
+    })
+    @ApiQuery({ name: 'groupId', required: true, type: Number })
+    @ApiQuery({ name: 'month', required: true, type: Number })
+    @ApiQuery({ name: 'year', required: false, type: Number })
+    getGroupCalendar(
+        @Req() req: RequestWithUser,
+        @Query('groupId', ParseIntPipe) groupId: number,
+        @Query('month', ParseIntPipe) month: number,
+        @Query('year') year?: string,
+    ) {
+        return this.studentsService.getGroupCalendar(req.user.id, groupId, month, year ? +year : undefined);
+    }
+
+    @Get('rating')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(Role.STUDENT)
+    @ApiOperation({
+        summary: "Studentlarning XP bo'yicha reytingi",
+        description: "Studentlarni guruh, filial yoki butun markaz bo'yicha filter qilib reytingini ko'rsatish.",
+    })
+    @ApiQuery({ name: 'type', enum: ['GROUP', 'BRANCH', 'CENTER'], required: true })
+    @ApiQuery({ name: 'groupId', required: false, type: Number })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'search', required: false, type: String })
+    getStudentRating(
+        @Req() req: RequestWithUser,
+        @Query() query: { type: 'GROUP' | 'BRANCH' | 'CENTER'; groupId?: string; page?: string; limit?: string; search?: string },
+    ) {
+        return this.studentsService.getStudentRating(req.user, query);
+    }
+
     @Get(':id')
     @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
     @RequirePermission(Label.STUDENTS, RoleActions.READ)
@@ -127,20 +191,6 @@ export class StudentsController {
     })
     async getGroupSummary(@Param('id', ParseIntPipe) id: number) {
         return this.studentsService.getGroupSummary(id);
-    }
-
-    @Get('my/groups')
-    @Roles(Role.STUDENT)
-    @UseGuards(AuthGuard, RolesGuard)
-    @ApiOperation({
-        summary: "Studentning o'z guruhlari",
-        description: "Student o'zi a'zo bo'lgan guruhlarni ko'rishi uchun.",
-    })
-    getMyGroups(
-        @Req() req: RequestWithUser,
-        @Query() query: { page?: string; limit?: string; search?: string; tab?: string; courseId?: string },
-    ) {
-        return this.studentsService.getMyGroupsPaginated(req.user.id, query);
     }
 
     @Get(':id/groups')

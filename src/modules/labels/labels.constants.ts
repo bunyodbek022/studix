@@ -42,6 +42,13 @@ export const LABEL_DEFINITIONS = [
     roles: STAFF_AND_TEACHER_ROLES,
   },
   {
+    key: 'my-details',
+    title: 'Ma\'lumotlarim',
+    path: '/my-details',
+    order: 5.5,
+    roles: [Role.STUDENT],
+  },
+  {
     key: 'lessons',
     title: 'Lessons',
     path: '/lessons',

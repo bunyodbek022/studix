@@ -60,6 +60,7 @@ export class TeachersController {
         password: { type: 'string', example: 'secret123' },
         position: { type: 'string', example: 'Backend Developer' },
         experience: { type: 'number', example: 3 },
+        phone: { type: 'string', example: '+998901234567' },
         photo: { type: 'string', format: 'binary', nullable: true },
       },
     },

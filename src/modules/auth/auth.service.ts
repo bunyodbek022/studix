@@ -14,11 +14,11 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async loginStudent(data: loginUserDto) {
     if (!data.email && !data.phone) throw new BadRequestException('Email or phone is required');
-    
+
     const studentExist = await this.prisma.student.findFirst({
       where: {
         OR: [
@@ -114,86 +114,89 @@ export class AuthService {
     };
   }
 
-    async getMe(userFromToken: any) {
-        const { id, role } = userFromToken;
+  async getMe(userFromToken: any) {
+    const { id, role } = userFromToken;
 
-        if (USER_ROLES.includes(role) || role === 'STAFF') {
-            const user = await this.prisma.user.findUnique({
-                where: { id },
-                select: {
-                    id: true,
-                    fullName: true,
-                    photo: true,
-                    email: true,
-                    phone: true,
-                    status: true,
-                    role: true,
-                    branchId: true,
-                    created_at: true,
-                    updated_at: true,
-                },
-            });
-            if (!user) throw new NotFoundException('User not found');
-            return { success: true, data: user, role: user.role };
-        }
-
-        if (role === Role.STUDENT) {
-            const student = await this.prisma.student.findUnique({
-                where: { id },
-                select: {
-                    id: true,
-                    fullName: true,
-                    photo: true,
-                    email: true,
-                    phone: true,
-                    status: true,
-                    branchId: true,
-                    created_at: true,
-                    updated_at: true,
-                    StudentGroups: {
-                        select: {
-                            group: {
-                                select: { id: true, name: true },
-                            },
-                        },
-                    },
-                },
-            });
-            if (!student) throw new NotFoundException('Student not found');
-            return { success: true, data: student, role: Role.STUDENT };
-        }
-
-        if (role === Role.TEACHER) {
-            const teacher = await this.prisma.teacher.findUnique({
-                where: { id },
-                select: {
-                    id: true,
-                    fullName: true,
-                    photo: true,
-                    status: true,
-                    email: true,
-                    phone: true,
-                    branchId: true,
-                    created_at: true,
-                    updated_at: true,
-                    groups: {
-                        select: {
-                            id: true,
-                            name: true,
-                        },
-                    },
-                },
-            });
-            if (!teacher) throw new NotFoundException('Teacher not found');
-            return { success: true, data: teacher, role: Role.TEACHER };
-        }
-
-        throw new NotFoundException('User not found');
+    if (USER_ROLES.includes(role) || role === 'STAFF') {
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          fullName: true,
+          photo: true,
+          email: true,
+          phone: true,
+          status: true,
+          role: true,
+          branchId: true,
+          created_at: true,
+          updated_at: true,
+        },
+      });
+      if (!user) throw new NotFoundException('User not found');
+      return { success: true, data: user, role: user.role };
     }
+
+    if (role === Role.STUDENT) {
+      const student = await this.prisma.student.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          fullName: true,
+          photo: true,
+          email: true,
+          phone: true,
+          status: true,
+          branchId: true,
+          birth_date: true,
+          created_at: true,
+          updated_at: true,
+          coins: true,
+          xp: true,
+          StudentGroups: {
+            select: {
+              group: {
+                select: { id: true, name: true },
+              },
+            },
+          },
+        },
+      });
+      if (!student) throw new NotFoundException('Student not found');
+      return { success: true, data: student, role: Role.STUDENT };
+    }
+
+    if (role === Role.TEACHER) {
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          fullName: true,
+          photo: true,
+          status: true,
+          email: true,
+          phone: true,
+          branchId: true,
+          created_at: true,
+          updated_at: true,
+          groups: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+      if (!teacher) throw new NotFoundException('Teacher not found');
+      return { success: true, data: teacher, role: Role.TEACHER };
+    }
+
+    throw new NotFoundException('User not found');
+  }
 }
 
 const USER_ROLES = [
-    Role.SUPERADMIN,
-    Role.ADMIN,
-    Role.CREATOR,
+  Role.SUPERADMIN,
+  Role.ADMIN,
+  Role.CREATOR,
 ];

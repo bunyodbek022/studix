@@ -61,9 +61,9 @@ export class LessonVideosController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: RequestWithUser,
   ) {
-    console.log(file);
-    console.log(file?.filename);
-    console.log(file?.originalname);
+    // console.log(file);
+    // console.log(file?.filename);
+    // console.log(file?.originalname);
     return this.lessonVideosService.create(dto, file?.filename, req.user);
   }
 
