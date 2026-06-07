@@ -37,12 +37,12 @@ export class StudentGroupController {
   constructor(private readonly studentGroupService: StudentGroupService) {}
 
   @Post()
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Guruhga talaba qo'shish",
     description:
       "Talabani muayyan o'quv guruhiga qo'shadi. Xona sig'imi tekshiriladi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiBody({ type: CreateStudentGroupDto })
   create(@Body() dto: CreateStudentGroupDto, @Req() req: RequestWithUser) {
@@ -50,12 +50,12 @@ export class StudentGroupController {
   }
 
   @Get()
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Barcha talaba-guruh bog'lanishlarini ko'rish",
     description:
       "Tizimdagi barcha talabalar va ularning guruhlarga a'zolik bog'lanishlari ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -71,12 +71,12 @@ export class StudentGroupController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Talaba-guruh yozuvini ID bo'yicha ko'rish",
     description:
       "Muayyan talabaning guruhga a'zolik yozuvini uning ID raqami bo'yicha qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -84,12 +84,12 @@ export class StudentGroupController {
   }
 
   @Patch(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Talaba-guruh a'zolik statusini yangilash",
     description:
       'Talabaning guruhdagi holatini (faol, guruhni tark etgan va hk) yangilaydi.\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   @ApiBody({ type: UpdateStudentGroupDto })
@@ -101,12 +101,12 @@ export class StudentGroupController {
   }
 
   @Delete(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: 'Talabani guruhdan chiqarish (INACTIVE)',
     description:
       "Talabaning guruhdagi a'zoligini butunlay o'chirmaydi, balki statusini INACTIVE holatiga o'tkazib, guruhdan chiqaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   remove(@Param('id', ParseIntPipe) id: number) {

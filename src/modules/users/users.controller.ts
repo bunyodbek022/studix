@@ -26,7 +26,7 @@ import { Roles } from 'src/common/decorators/role.decorator';
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
 @ApiCookieAuth('access_token')
-@Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+@Roles(Role.CREATOR, Role.ADMIN)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

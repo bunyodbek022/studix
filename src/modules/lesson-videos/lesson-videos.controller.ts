@@ -36,12 +36,12 @@ export class LessonVideosController {
   constructor(private readonly lessonVideosService: LessonVideosService) {}
 
   @Post()
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+  @Roles(Role.CREATOR, Role.ADMIN, Role.TEACHER)
   @ApiOperation({
     summary: 'Dars uchun yangi video yuklash',
     description:
       'Muayyan darsga yangi video dars faylini yuklaydi (multipart/form-data).\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`, `TEACHER`',
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', multerVideoConfig))
@@ -68,12 +68,12 @@ export class LessonVideosController {
   }
 
   @Delete(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+  @Roles(Role.CREATOR, Role.ADMIN, Role.TEACHER)
   @ApiOperation({
     summary: "Dars videosini o'chirish",
     description:
       "Darsga yuklangan videoni tizimdan butunlay o'chirib yuboradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`, `TEACHER`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   remove(@Param('id', ParseIntPipe) id: number) {

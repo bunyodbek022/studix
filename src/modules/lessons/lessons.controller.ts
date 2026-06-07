@@ -35,12 +35,12 @@ export class LessonsController {
 
   @Post()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: 'Guruh uchun yangi dars yaratish',
     description:
       'Muayyan guruh uchun yangi dars yaratadi.\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   createLesson(@Body() payload: CreateLessonDto, @Req() req: RequestWithUser) {
     return this.lessonService.createLesson(payload, req.user);
@@ -48,12 +48,12 @@ export class LessonsController {
 
   @Post(':id/attendance')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+  @Roles(Role.CREATOR, Role.ADMIN, Role.TEACHER)
   @ApiOperation({
     summary: 'Dars davomatini saqlash',
     description:
       'Talabalarning darsga qatnashganligi yoki qatnashmaganligi (davomat) holatini saqlaydi.\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`, `TEACHER`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   @ApiBody({ type: SaveAttendanceDto })
@@ -67,13 +67,13 @@ export class LessonsController {
 
   @Get('by-date')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+  @Roles(Role.CREATOR, Role.ADMIN, Role.TEACHER)
   @ApiOperation({
     summary:
       "Guruhning ma'lum bir yil, oy yoki kunga tegishli o'tilgan darslari",
     description:
       "Guruhning faqat o'tilgan (conducted) darslarini yil, oy va kun bo'yicha filterlab qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`, `TEACHER`',
   })
   @ApiQuery({
     name: 'groupId',
@@ -118,12 +118,12 @@ export class LessonsController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Dars tafsilotlarini ko'rish",
     description:
       "Muayyan dars ma'lumotlarini uning unikal ID raqami bo'yicha qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -131,12 +131,12 @@ export class LessonsController {
   }
 
   @Get(':id/attendance')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.TEACHER)
+  @Roles(Role.CREATOR, Role.ADMIN, Role.TEACHER)
   @ApiOperation({
     summary: "Dars davomati ro'yxati",
     description:
       "Dars bo'yicha barcha talabalarning davomat natijalari ro'yxatini qaytaradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`, `TEACHER`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`, `TEACHER`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   getAttendance(@Param('id', ParseIntPipe) id: number) {
@@ -144,12 +144,12 @@ export class LessonsController {
   }
 
   @Patch(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: 'Darsni yangilash',
     description:
       'Dars mavzusi yoki boshqa dars tafsilotlarini yangilaydi.\n\n' +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLessonDto) {
@@ -157,12 +157,12 @@ export class LessonsController {
   }
 
   @Delete(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   @ApiOperation({
     summary: "Darsni tizimdan o'chirish",
     description:
       "Darsni tizimdan butunlay o'chirib yuboradi.\n\n" +
-      '**Ruxsat (Access):** Rollar: `SUPERADMIN`, `CREATOR`, `ADMIN`',
+      '**Ruxsat (Access):** Rollar: `CREATOR`, `ADMIN`',
   })
   @ApiParam({ name: 'id', type: Number, example: 1 })
   remove(@Param('id', ParseIntPipe) id: number) {

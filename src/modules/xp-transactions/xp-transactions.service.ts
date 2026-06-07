@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateXpTransactionDto } from './dto/create-xp-transaction.dto';
 import { Role } from '@prisma/client';
@@ -7,15 +11,19 @@ import { Role } from '@prisma/client';
 export class XpTransactionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateXpTransactionDto, currentUser: { id: number; branchId?: number; role: Role }) {
+  async create(
+    dto: CreateXpTransactionDto,
+    currentUser: { id: number; branchId?: number; role: Role },
+  ) {
     if (!dto.studentId && !dto.teacherId && !dto.userId) {
-      throw new BadRequestException('Bitta qabul qiluvchi (student, teacher yoki admin) tanlanishi shart');
+      throw new BadRequestException(
+        'Bitta qabul qiluvchi (student, teacher yoki admin) tanlanishi shart',
+      );
     }
 
     const branchId = currentUser.branchId;
     if (!branchId) throw new BadRequestException('Branch ID is required');
 
-    // Get branch to find center and its xpToCoinRatio
     const branch = await this.prisma.branch.findUnique({
       where: { id: branchId },
       include: { center: true },
@@ -26,7 +34,6 @@ export class XpTransactionsService {
     const amountCoin = dto.amountXp * ratio;
 
     return this.prisma.$transaction(async (tx) => {
-      // Create transaction record
       const transaction = await tx.xpTransaction.create({
         data: {
           branchId,
@@ -42,7 +49,6 @@ export class XpTransactionsService {
         },
       });
 
-      // Update the user's balances
       if (dto.studentId) {
         await tx.student.update({
           where: { id: dto.studentId },

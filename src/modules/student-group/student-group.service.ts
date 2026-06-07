@@ -58,7 +58,7 @@ export class StudentGroupService {
     }
 
     const currentCount = await this.prisma.studentGroup.count({
-      where: { groupId: dto.groupId, status: 'ACTIVE' },
+      where: { groupId: dto.groupId, status: { in: ['ACTIVE', 'PROBATION'] } },
     });
     if (currentCount >= group.room.capacity) {
       throw new BadRequestException("Guruh to'liq, joy mavjud emas");

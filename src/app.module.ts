@@ -20,9 +20,12 @@ import { RolePermissionsModule } from './modules/role-permissions/role-permissio
 import { ReasonsModule } from './modules/reasons/reasons.module';
 import { GiftsModule } from './modules/gifts/gifts.module';
 import { XpTransactionsModule } from './modules/xp-transactions/xp-transactions.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -66,6 +69,7 @@ import { XpTransactionsModule } from './modules/xp-transactions/xp-transactions.
     ReasonsModule,
     GiftsModule,
     XpTransactionsModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [UserSeeder],

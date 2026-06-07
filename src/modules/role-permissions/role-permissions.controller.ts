@@ -19,7 +19,7 @@ import { Role } from '@prisma/client';
 
 @Controller('role-permissions')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.SUPERADMIN, Role.CREATOR) // Only Creator and Superadmin can manage permissions
+@Roles(Role.CREATOR) // Only Creator and Superadmin can manage permissions
 export class RolePermissionsController {
   constructor(
     private readonly rolePermissionsService: RolePermissionsService,

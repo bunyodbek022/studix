@@ -335,15 +335,11 @@ export class StudentsService {
       }),
     ]);
 
-    // Calculate rank for each student in the paginated result
     const data = students.map((s, idx) => ({
       ...s,
       rank: skip + idx + 1,
     }));
 
-    // Find absolute rank of the current user within the SAME filter
-    // Absolute rank = count of students with xp > my xp + 1
-    // Tie breaker: if xp is same, id < my id
     let currentUserRating: any = null;
 
     const isCurrentUserInResults = data.some((s) => s.id === currentStudent.id);
@@ -359,7 +355,6 @@ export class StudentsService {
         },
       });
 
-      // Get current user info to append if they match the filter
       const currentUserInFilter = await this.prisma.student.findFirst({
         where: {
           id: currentStudent.id,
@@ -395,8 +390,8 @@ export class StudentsService {
     };
   }
 
-
-  async getGroupSummary(studentId: number) {
+  async getGroupSummary(studentId: number, currentUser?: { branchId?: number }) {
+    await this.findOne(studentId, currentUser);
     const studentGroups = await this.prisma.studentGroup.findMany({
       where: {
         studentId,
@@ -410,7 +405,6 @@ export class StudentsService {
             lesson: {
               include: {
                 lesson: {
-                  // Attendance
                   where: {
                     studentId,
                     isPresent: false,
@@ -468,10 +462,8 @@ export class StudentsService {
       throw new NotFoundException('Student not found');
     }
 
-    // 1. Gamification Metrics
     const { xp, coins } = student;
 
-    // 2. Branch Rank
     const higherXpCount = await this.prisma.student.count({
       where: {
         branchId: student.branchId,
@@ -484,7 +476,6 @@ export class StudentsService {
     });
     const rank = higherXpCount + 1;
 
-    // 3. Attendance
     const attendances = await this.prisma.attendance.findMany({
       where: { studentId: student.id },
       select: { isPresent: true },
@@ -494,7 +485,6 @@ export class StudentsService {
     const presentLessons = attendances.filter((a) => a.isPresent).length;
     const attendanceRate = totalLessons > 0 ? Math.round((presentLessons / totalLessons) * 100) : 0;
 
-    // 4. Active Groups (Schedule)
     const studentGroups = await this.prisma.studentGroup.findMany({
       where: { studentId: student.id, status: 'ACTIVE' },
       include: {
@@ -518,7 +508,6 @@ export class StudentsService {
       weekDays: sg.group.weekDays,
     }));
 
-    // 5. Recent Activity
     const recentActivities = await this.prisma.xpTransaction.findMany({
       where: { studentId: student.id },
       orderBy: { created_at: 'desc' },
@@ -536,7 +525,6 @@ export class StudentsService {
       createdAt: a.created_at,
     }));
 
-    // 6. Homework Stats
     const activeGroupIds = studentGroups.map(sg => sg.groupId);
     const totalHomeworks = await this.prisma.homework.count({
       where: { lesson: { groupId: { in: activeGroupIds } } }
@@ -546,7 +534,6 @@ export class StudentsService {
       where: { studentId: student.id, status: 'COMPLETED' }
     });
 
-    // 7. Weekly XP Data (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -605,7 +592,6 @@ export class StudentsService {
   }
 
   async getGroupCalendar(studentId: number, groupId: number, month: number, year?: number) {
-    // 1. Verify that the student is actually in this group
     const isMember = await this.prisma.studentGroup.findFirst({
       where: {
         studentId,
@@ -618,7 +604,6 @@ export class StudentsService {
       throw new NotFoundException(`Guruh topilmadi yoki siz bu guruh a'zosi emassiz`);
     }
 
-    // 2. Fetch group schedule info
     const group = await this.prisma.group.findUnique({
       where: { id: groupId },
       include: {
@@ -748,7 +733,8 @@ export class StudentsService {
     };
   }
 
-  async getAttendanceDetails(studentId: number, groupId: number) {
+  async getAttendanceDetails(studentId: number, groupId: number, currentUser?: { branchId?: number }) {
+    await this.findOne(studentId, currentUser);
     const studentGroup = await this.prisma.studentGroup.findUnique({
       where: {
         groupId_studentId: { groupId, studentId },

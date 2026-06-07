@@ -26,31 +26,31 @@ export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 
   @Post()
-  @Roles(Role.SUPERADMIN, Role.CREATOR)
+  @Roles(Role.CREATOR)
   create(@Body() createBranchDto: CreateBranchDto) {
     return this.branchesService.create(createBranchDto);
   }
 
   @Get()
-  @Roles(Role.SUPERADMIN, Role.CREATOR)
+  @Roles(Role.CREATOR)
   findAll(@Req() req: Request ) {
     return this.branchesService.findAll(req["user"]);
   }
 
   @Get(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.CREATOR, Role.ADMIN)
   findOne(@Param('id') id: string) {
     return this.branchesService.findOne(+id);
   }
 
   @Patch(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR)
+  @Roles(Role.CREATOR)
   update(@Param('id') id: string, @Body() updateBranchDto: UpdateBranchDto) {
     return this.branchesService.update(+id, updateBranchDto);
   }
 
   @Delete(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR)
+  @Roles(Role.CREATOR)
   remove(@Param('id') id: string) {
     return this.branchesService.remove(+id);
   }

@@ -11,6 +11,7 @@ enum Status {
   INACTIVE
   FREEZE
   DELETED
+  PROBATION
 }
 
 enum ReasonCategory {
@@ -160,6 +161,8 @@ model Branch {
   reasons           Reason[]
   gifts             Gift[]
   xpTransactions    XpTransaction[]
+  payments          Payment[]
+  paymentHistories  PaymentHistory[]
 }
 
 model User {
@@ -273,6 +276,8 @@ model Student {
   studentHistories  StudentHistory[]
   xpTransactions    XpTransaction[]
   giftPurchases     GiftPurchase[]
+  payments          Payment[]
+  paymentHistories  PaymentHistory[]
 
   @@unique([email, branchId])
   @@unique([phone, branchId])
@@ -349,6 +354,8 @@ model Group {
   room           Room           @relation(fields: [roomId], references: [id])
   course         Course         @relation(fields: [courseId], references: [id])
   groupHistories GroupHistory[]
+  payments          Payment[]
+  paymentHistories  PaymentHistory[]
 
   @@unique([courseId, name, branchId])
 }
@@ -373,7 +380,9 @@ model StudentGroup {
   groupId         Int
   studentId       Int
   userId          Int
-  status          Status    @default(ACTIVE)
+  status          Status    @default(PROBATION)
+  paymentStartDate DateTime?
+  exitDate        DateTime?
   freezeStartDate DateTime?
   freezeEndDate   DateTime?
   unfrozenAt      DateTime?
@@ -597,4 +606,47 @@ model GiftPurchase {
   student Student? @relation(fields: [studentId], references: [id])
   teacher Teacher? @relation(fields: [teacherId], references: [id])
   user    User?    @relation(fields: [userId], references: [id])
+}
+
+enum PaymentAction {
+  MONTHLY_DEBT
+  TRIAL_APPROVED
+  GROUP_EXIT
+  PAYMENT
+  MANUAL_ADJUSTMENT
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  branchId    Int
+  studentId   Int
+  groupId     Int
+  month       Int
+  year        Int
+  amount      Decimal  @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id])
+  group       Group    @relation(fields: [groupId], references: [id])
+
+  @@unique([studentId, groupId, month, year])
+}
+
+model PaymentHistory {
+  id          Int           @id @default(autoincrement())
+  branchId    Int
+  studentId   Int
+  groupId     Int
+  month       Int
+  year        Int
+  action      PaymentAction
+  amount      Decimal
+  description String?
+  created_at  DateTime      @default(now())
+
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id])
+  group       Group    @relation(fields: [groupId], references: [id])
 }

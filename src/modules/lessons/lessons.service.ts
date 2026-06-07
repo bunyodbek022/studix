@@ -42,6 +42,7 @@ export class LessonsService {
         userId: currentUser.role != Role.TEACHER ? currentUser.id : null,
       },
     });
+
     return {
       success: true,
       message: 'lesson created successfully',
@@ -51,7 +52,7 @@ export class LessonsService {
   async saveAttendance(
     lessonId: number,
     dto: SaveAttendanceDto,
-    currentUser: { id: number, role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
@@ -62,7 +63,6 @@ export class LessonsService {
       throw new NotFoundException(`Dars topilmadi: ${lessonId}`);
     }
 
-    // Get center settings for XP
     const branch = await this.prisma.branch.findUnique({
       where: { id: lesson.branchId },
       include: { center: true },
@@ -71,17 +71,13 @@ export class LessonsService {
     const ratio = branch?.center.xpToCoinRatio || 1;
     const attendanceCoins = attendanceXp * ratio;
 
-    // Guruhda o'qiyotgan studentlar
     const studentGroups = await this.prisma.studentGroup.findMany({
-      where: {
-        groupId: lesson.groupId,
-      },
+      where: { groupId: lesson.groupId },
       select: { studentId: true },
     });
 
     const validStudentIds = new Set(studentGroups.map((sg) => sg.studentId));
 
-    // Noto'g'ri studentId tekshirish
     const invalidIds = dto.items.filter(
       (item) => !validStudentIds.has(item.studentId),
     );
@@ -91,16 +87,13 @@ export class LessonsService {
       );
     }
 
-    // Old attendances
     const oldAttendances = await this.prisma.attendance.findMany({
       where: { lessonId },
     });
-    const oldState = new Map(oldAttendances.map(a => [a.studentId, a.isPresent]));
+    const oldState = new Map(oldAttendances.map((a) => [a.studentId, a.isPresent]));
 
-    // Transaction to save attendance and update XP
     await this.prisma.$transaction(async (tx) => {
       for (const item of dto.items) {
-        // Upsert attendance
         await tx.attendance.upsert({
           where: {
             lessonId_studentId: {
@@ -121,7 +114,6 @@ export class LessonsService {
           },
         });
 
-        // XP logic
         const wasPresent = oldState.get(item.studentId);
         const isPresentNow = item.isPresent;
 
@@ -130,11 +122,9 @@ export class LessonsService {
           let coinChange = 0;
 
           if (isPresentNow && !wasPresent) {
-            // Became present
             xpChange = attendanceXp;
             coinChange = attendanceCoins;
           } else if (!isPresentNow && wasPresent) {
-            // Became absent (undo XP)
             xpChange = -attendanceXp;
             coinChange = -attendanceCoins;
           }
