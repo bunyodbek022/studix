@@ -13,6 +13,8 @@ export class XpTransactionsController {
 
   @Post()
   create(@Body() createXpTransactionDto: CreateXpTransactionDto, @Req() req: RequestWithUser) {
+    console.log(req.user);
+    
     return this.xpTransactionsService.create(createXpTransactionDto, req.user);
   }
 

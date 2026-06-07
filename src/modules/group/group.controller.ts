@@ -64,7 +64,7 @@ export class GroupsController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.STUDENT)
   @ApiOperation({
     summary: "Guruh ma'lumotlarini ko'rish",
     description:
@@ -102,7 +102,7 @@ export class GroupsController {
   }
 
   @Get(':id/lessons')
-  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN)
+  @Roles(Role.SUPERADMIN, Role.CREATOR, Role.ADMIN, Role.STUDENT)
   @ApiOperation({
     summary: 'Guruh darslari tarixi',
     description:
