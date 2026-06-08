@@ -24,14 +24,14 @@ import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from '@prisma/client';
 import { MakePaymentDto } from './dto/make-payment.dto';
 import { FindDebtorsDto } from './dto/find-debtors.dto';
-import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
+import type { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 
 @ApiTags('Payments & Billing')
 @Controller('payments')
 @UseGuards(AuthGuard, RolesGuard)
 @ApiCookieAuth('access_token')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Get('debtors')
   @Roles(Role.CREATOR, Role.ADMIN)
